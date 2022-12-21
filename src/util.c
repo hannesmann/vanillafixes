@@ -1,6 +1,8 @@
 #define UNICODE
 
 #include <windows.h>
+#include <shlwapi.h>
+#include <shellapi.h>
 #include <stdio.h>
 
 #define AssertMessageBox(condition, message) \
@@ -87,4 +89,17 @@ int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue)
 	CloseHandle(hWowConfigFile);
 
 	return 0;
+}
+
+LPWSTR UtilSetCustomExecutable(LPWSTR pCmdLine, LPWSTR pOrigPath) {
+	int numArgs = 0;
+	LPWSTR* pArgs = CommandLineToArgvW(GetCommandLine(), &numArgs);
+
+	for(int i = 1; i < numArgs; i++) {
+		if(StrStrIW(pArgs[i], L".exe")) {
+			return pArgs[i];
+		}
+	}
+
+	return pOrigPath;
 }

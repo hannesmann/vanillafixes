@@ -3,7 +3,6 @@
 
 #include <windows.h>
 #include <shlwapi.h>
-#include <shellapi.h>
 
 #include <stdio.h>
 
@@ -63,6 +62,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		L"WoW.exe not found. Extract VanillaFixes into the same directory as the game.");
 	AssertMessageBox(GetFileAttributes(pPatcherPath) != INVALID_FILE_ATTRIBUTES,
 		L"VfPatcher.dll not found. Extract all files into the game directory.");
+
+	pWowExePath = UtilSetCustomExecutable(pCmdLine, pWowExePath);
 
 	STARTUPINFO startupInfo;
 	PROCESS_INFORMATION processInfo;
