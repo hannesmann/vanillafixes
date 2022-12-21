@@ -10,6 +10,12 @@
 #include "offsets.h"
 #include "cpu.c"
 
+#ifdef NDEBUG
+#define PrintInDebug(str)
+#else
+#define PrintInDebug(str) OutputDebugString(str)
+#endif
+
 static HMODULE hSelf = NULL;
 static BOOL mainThreadFinished = FALSE;
 
@@ -29,7 +35,7 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
 		powerThrottling.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
 		powerThrottling.ControlMask = PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION;
 
-		OutputDebugString("VanillaFixes: Disabing Windows 11 timer resolution throttling");
+		PrintInDebug("VanillaFixes: Disabing Windows 11 timer resolution throttling");
 		BOOL setProcessInformationError = pSetProcessInformation(
 			GetCurrentProcess(),
 			ProcessPowerThrottling,
@@ -38,11 +44,11 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
 		);
 
 		sprintf(scratchBuffer, "VanillaFixes: SetProcessInformation returned %d", setProcessInformationError);
-		OutputDebugString(scratchBuffer);
+		PrintInDebug(scratchBuffer);
 
 		powerThrottling.ControlMask = PROCESS_POWER_THROTTLING_EXECUTION_SPEED;
 
-		OutputDebugString("VanillaFixes: Disabing execution speed throttling");
+		PrintInDebug("VanillaFixes: Disabing execution speed throttling");
 		setProcessInformationError = pSetProcessInformation(
 			GetCurrentProcess(),
 			ProcessPowerThrottling,
@@ -51,10 +57,10 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
 		);
 
 		sprintf(scratchBuffer, "VanillaFixes: SetProcessInformation returned %d", setProcessInformationError);
-		OutputDebugString(scratchBuffer);
+		PrintInDebug(scratchBuffer);
 	}
 	else {
-		OutputDebugString("VanillaFixes: SetProcessInformation not supported");
+		PrintInDebug("VanillaFixes: SetProcessInformation not supported");
 	}
 
 	*pWowTscTicksPerSecond = CpuCalibrateTsc();
@@ -64,7 +70,7 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
 	*pWowUseTsc = TRUE;
 
 	sprintf(scratchBuffer, "VanillaFixes: TSC frequency is %.3lf MHz", *pWowTscTicksPerSecond * 0.000001);
-	OutputDebugString(scratchBuffer);
+	PrintInDebug(scratchBuffer);
 
 	while(!mainThreadFinished) {
 		Sleep(1);
@@ -88,22 +94,22 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
 	hSelf = hinstDLL;
 
     if(fdwReason == DLL_PROCESS_ATTACH) {
-		OutputDebugString("VanillaFixes: DLL_PROCESS_ATTACH");
+		PrintInDebug("VanillaFixes: DLL_PROCESS_ATTACH");
 
 		if(MH_Initialize() != MH_OK) {
-			OutputDebugString("VanillaFixes: MH_Initialize failed");
+			PrintInDebug("VanillaFixes: MH_Initialize failed");
 			return FALSE;
 		}
 		if(MH_CreateHook(pWowTimeKeeperThreadProc, &VfTimeKeeperThreadProc, NULL) != MH_OK) {
-			OutputDebugString("VanillaFixes: Time keeper hook failed");
+			PrintInDebug("VanillaFixes: Time keeper hook failed");
 			return FALSE;
 		}
 		if(MH_CreateHook(pWowGetTicksPerSecond, &VfGetTicksPerSecond, NULL) != MH_OK) {
-			OutputDebugString("VanillaFixes: Ticks per second hook failed");
+			PrintInDebug("VanillaFixes: Ticks per second hook failed");
 			return FALSE;
 		}
 		if(MH_EnableHook(MH_ALL_HOOKS) != MH_OK) {
-			OutputDebugString("VanillaFixes: MH_EnableHook(MH_ALL_HOOKS) failed");
+			PrintInDebug("VanillaFixes: MH_EnableHook(MH_ALL_HOOKS) failed");
 			return FALSE;
 		}
 
@@ -111,7 +117,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
 		timeBeginPeriod(1);
 	}
 	else if(fdwReason == DLL_PROCESS_DETACH) {
-		OutputDebugString("VanillaFixes: DLL_PROCESS_DETACH");
+		PrintInDebug("VanillaFixes: DLL_PROCESS_DETACH");
 
 		MH_DisableHook(MH_ALL_HOOKS);
 		MH_Uninitialize();
