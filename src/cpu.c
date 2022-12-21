@@ -22,7 +22,7 @@ inline void CpuTimeSample(PLARGE_INTEGER pQpc, PDWORD64 pTsc) {
     Sleep(0);
 
     QueryPerformanceCounter(pQpc);
-    *pTsc = __rdtsc();
+    *pTsc = WowReadTsc();
 
 	/* Wait for QPC and RDTSC to finish */
     _mm_lfence();

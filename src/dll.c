@@ -60,7 +60,7 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
 	*pWowTscTicksPerSecond = CpuCalibrateTsc();
 	*pWowTscToMilliseconds = 1.0 / (*pWowTscTicksPerSecond * 0.001);
 	/* Align TSC with GetTickCount for CHECK_TIMING_VALUES */
-	*pWowTimerOffset = GetTickCount() - (__rdtsc() * *pWowTscToMilliseconds);
+	*pWowTimerOffset = GetTickCount() - (WowReadTsc() * *pWowTscToMilliseconds);
 	*pWowUseTsc = TRUE;
 
 	sprintf(scratchBuffer, "VanillaFixes: TSC frequency is %.3lf MHz", *pWowTscTicksPerSecond * 0.000001);

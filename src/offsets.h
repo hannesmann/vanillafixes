@@ -12,4 +12,7 @@ PDWORD64 pWowTscTicksPerSecond = (PDWORD64)0x008332c0;
 double* pWowTscToMilliseconds = (double*)0x008332c8;
 double* pWowTimerOffset = (double*)0x00884c88;
 
+typedef DWORD64 (*WowReadTsc_t)();
+WowReadTsc_t WowReadTsc = (WowReadTsc_t)0x004293d0;
+
 #endif
