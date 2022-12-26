@@ -16,7 +16,7 @@ During startup VanillaFixes will modify timing variables in memory to force the 
 
 ## Compatibility with other mods
 
-* **Nampower:** VanillaFixes.exe will load [Nampower](https://github.com/namreeb/nampower) if the DLL is present in the game directory.
+* **Nampower:** ~~VanillaFixes.exe will load [Nampower](https://github.com/namreeb/nampower) if the DLL is present in the game directory.~~ This feature will be fixed in the next release.
 
 * **FoV changers, large address patchers, etc**: These usually modify WoW.exe and will still work.
 
