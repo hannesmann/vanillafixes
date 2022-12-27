@@ -1,19 +1,9 @@
-#define UNICODE
-#define WIN32_LEAN_AND_MEAN
-
-#include <windows.h>
 #include <shlwapi.h>
-
-#include <stdio.h>
-
-#include "cpu.c"
 #include "util.c"
 
 int InjectDll(LPWSTR pDllPath, HANDLE hTargetProcess) {
 	int dllPathLen = (wcslen(pDllPath) + 1) * sizeof(WCHAR);
-
-	LPVOID pLoadLibrary = (LPVOID)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "LoadLibraryW");
-	LPVOID pRemoteDllPath = (LPVOID)VirtualAllocEx(
+	LPVOID pRemoteDllPath = VirtualAllocEx(
 		hTargetProcess,
 		NULL,
 		dllPathLen,
@@ -24,24 +14,30 @@ int InjectDll(LPWSTR pDllPath, HANDLE hTargetProcess) {
 	WriteProcessMemory(hTargetProcess, pRemoteDllPath, pDllPath, dllPathLen, NULL);
 
 	HANDLE hThread =
-		CreateRemoteThread(hTargetProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pLoadLibrary, pRemoteDllPath, 0, NULL);
+		CreateRemoteThread(hTargetProcess, NULL, 0, (LPTHREAD_START_ROUTINE)&LoadLibraryW, pRemoteDllPath, 0, NULL);
 	AssertMessageBox(hThread, L"Failed to create remote thread");
 
-	WaitForSingleObject(hThread, INFINITE);
+	WaitForSingleObject(hThread, 10000);
 
-	DWORD threadResult;
-	BOOL dllMainSucceeded = GetExitCodeThread(hThread, &threadResult) && threadResult;
+	DWORD threadResult = 0;
+	GetExitCodeThread(hThread, &threadResult);
 
 	CloseHandle(hThread);
 
 	AssertMessageBox(VirtualFreeEx(hTargetProcess, pRemoteDllPath, 0, MEM_RELEASE), L"Failed to clean up remote data");
-	AssertMessageBox(dllMainSucceeded, L"DllMain failed after injection.\n\nMake sure you have a compatible game client.");
+	AssertMessageBox(threadResult && threadResult != STILL_ACTIVE,
+		L"DllMain failed after injection.\n\n"
+		L"Make sure you have a compatible game client."
+	);
 
 	return 0;
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
-	AssertMessageBox(CpuHasInvariantTsc(),
+	int cpuInfo[4] = {0};
+	__cpuid(cpuInfo, 0x80000007);
+
+    AssertMessageBox(cpuInfo[3] & (1 << 8),
 		L"Your processor does not support the \"Invariant TSC\" feature.\n\n"
 		L"VanillaFixes can only work reliably on modern (2007+) Intel and AMD processors."
 	);
@@ -65,26 +61,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	pWowExePath = UtilSetCustomExecutable(pCmdLine, pWowExePath);
 
-	STARTUPINFO startupInfo;
-	PROCESS_INFORMATION processInfo;
-
-	ZeroMemory(&startupInfo, sizeof(startupInfo));
-	ZeroMemory(&processInfo, sizeof(processInfo));
+	STARTUPINFO startupInfo = {0};
+	PROCESS_INFORMATION processInfo = {0};
 
 	startupInfo.cb = sizeof(startupInfo);
 
-	BOOL processCreated = CreateProcess(
-		NULL,
-		UtilGetWowCmdLine(pWowExePath, pCmdLine),
-		NULL,
-		NULL,
-		FALSE,
-		CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT,
-		NULL,
-		NULL,
-		&startupInfo,
-		&processInfo
-	);
+	LPWSTR pWowCmdLine = UtilGetWowCmdLine(pWowExePath, pCmdLine);
+	DWORD wowCreationFlags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
+
+	BOOL processCreated =
+		CreateProcess(NULL, pWowCmdLine, NULL, NULL, FALSE, wowCreationFlags, NULL, NULL, &startupInfo, &processInfo);
 
 	AssertMessageBox(processCreated, L"CreateProcess failed for WoW.exe");
 

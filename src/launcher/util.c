@@ -1,14 +1,7 @@
-#define UNICODE
-
-#include <windows.h>
 #include <shlwapi.h>
 #include <shellapi.h>
-#include <stdio.h>
 
-#define AssertMessageBox(condition, message) \
-	if(!(condition)) { \
-		return MessageBox(NULL, message, L"VanillaFixes", MB_OK | MB_ICONERROR); \
-	}
+#include <stdio.h>
 
 LPWSTR UtilGetPath(LPCWSTR pModuleDirectory, LPCWSTR pRelativeFile) {
 	int characters = wcslen(pModuleDirectory) + wcslen(pRelativeFile) + 2;

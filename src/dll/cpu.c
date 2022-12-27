@@ -1,28 +1,11 @@
-#define WIN32_LEAN_AND_MEAN
-
-#include <windows.h>
-#include <math.h>
-
 #include "offsets.h"
-
-BOOL CpuHasInvariantTsc() {
-    int cpuInfo[4] = {0};
-    __cpuid(cpuInfo, 0x80000000);
-
-    if(cpuInfo[0] >= 0x80000007) {
-        __cpuid(cpuInfo, 0x80000007);
-        return cpuInfo[3] & (1 << 8);
-    }
-
-    return FALSE;
-}
 
 inline void CpuTimeSample(PLARGE_INTEGER pQpc, PDWORD64 pTsc) {
     /* Always request a new timeslice before sampling */
     Sleep(0);
 
     QueryPerformanceCounter(pQpc);
-    *pTsc = WowReadTsc();
+    *pTsc = fnWowReadTsc();
 
 	/* Wait for QPC and RDTSC to finish */
     _mm_lfence();
