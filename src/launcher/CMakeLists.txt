@@ -5,7 +5,7 @@ set_target_properties(vanillafixes_launcher PROPERTIES MSVC_RUNTIME_LIBRARY "Mul
 
 target_precompile_headers(vanillafixes_launcher PRIVATE "${CMAKE_SOURCE_DIR}/src/pch.h")
 
-target_link_libraries(vanillafixes_launcher shlwapi shell32)
+target_link_libraries(vanillafixes_launcher shlwapi)
 target_link_options(vanillafixes_launcher PRIVATE "/MANIFEST:NO")
 
 set_target_properties(vanillafixes_launcher PROPERTIES OUTPUT_NAME "VanillaFixes")

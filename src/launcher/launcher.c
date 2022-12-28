@@ -59,14 +59,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	AssertMessageBox(GetFileAttributes(pPatcherPath) != INVALID_FILE_ATTRIBUTES,
 		L"VfPatcher.dll not found. Extract all files into the game directory.");
 
-	pWowExePath = UtilSetCustomExecutable(pCmdLine, pWowExePath);
-
 	STARTUPINFO startupInfo = {0};
 	PROCESS_INFORMATION processInfo = {0};
 
 	startupInfo.cb = sizeof(startupInfo);
 
-	LPWSTR pWowCmdLine = UtilGetWowCmdLine(pWowExePath, pCmdLine);
+	LPWSTR pWowCmdLine = UtilGetWowCmdLine(pWowExePath);
 	DWORD wowCreationFlags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
 
 	BOOL processCreated =

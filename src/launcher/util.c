@@ -1,7 +1,9 @@
 #include <shlwapi.h>
-#include <shellapi.h>
 
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "cmdline.c"
 
 LPWSTR UtilGetPath(LPCWSTR pModuleDirectory, LPCWSTR pRelativeFile) {
 	int characters = wcslen(pModuleDirectory) + wcslen(pRelativeFile) + 2;
@@ -12,22 +14,12 @@ LPWSTR UtilGetPath(LPCWSTR pModuleDirectory, LPCWSTR pRelativeFile) {
 	return pBuffer;
 }
 
-LPWSTR UtilGetWowCmdLine(LPCWSTR pWowExePath, LPCWSTR pCmdLine) {
-	LPWSTR pWowCmdLineExe = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-	wcscpy(pWowCmdLineExe, pWowExePath);
-	PathQuoteSpaces(pWowCmdLineExe);
+LPWSTR UtilGetWowCmdLine(LPCWSTR pDefaultWowExePath) {
+	VF_CMDLINE_PARSE_DATA data = {0};
+	data.pWowExePath = pDefaultWowExePath;
 
-	int wowCmdLineCharacters = wcslen(pWowCmdLineExe) + wcslen(pCmdLine) + 2;
-	LPWSTR pWowCmdLine = HeapAlloc(GetProcessHeap(), 0, wowCmdLineCharacters * sizeof(WCHAR));
-
-	if(*pCmdLine) {
-		swprintf(pWowCmdLine, wowCmdLineCharacters, L"%ls %ls", pWowCmdLineExe, pCmdLine);
-	}
-	else {
-		pWowCmdLine = pWowCmdLineExe;
-	}
-
-	return pWowCmdLine;
+	CmdLineParse(__argc, __wargv, &data);
+	return CmdLineFormat(&data);
 }
 
 /* Unused right now but it could make sense to override some default settings (sound channels, etc.) */
@@ -82,17 +74,4 @@ int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue)
 	CloseHandle(hWowConfigFile);
 
 	return 0;
-}
-
-LPWSTR UtilSetCustomExecutable(LPWSTR pCmdLine, LPWSTR pOrigPath) {
-	int numArgs = 0;
-	LPWSTR* pArgs = CommandLineToArgvW(GetCommandLine(), &numArgs);
-
-	for(int i = 1; i < numArgs; i++) {
-		if(StrStrIW(pArgs[i], L".exe")) {
-			return pArgs[i];
-		}
-	}
-
-	return pOrigPath;
 }
