@@ -11,7 +11,7 @@ BOOL RemoteSyncData(HANDLE hTargetProcess) {
 			PAGE_READWRITE
 		);
 
-		WriteProcessMemory(hTargetProcess, g_pSharedPtr, &g_pRemoteData, sizeof(PVF_SHARED_DATA*), NULL);
+		WriteProcessMemory(hTargetProcess, g_pSharedData, &g_pRemoteData, sizeof(PVF_SHARED_DATA*), NULL);
 	}
 
 	return WriteProcessMemory(hTargetProcess, g_pRemoteData, &g_sharedData, sizeof(VF_SHARED_DATA), NULL);

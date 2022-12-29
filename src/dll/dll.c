@@ -35,18 +35,32 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
 	FreeLibraryAndExitThread(g_hSelf, 0);
 }
 
-/* Hook this function to prevent it from hanging the main thread */
-DWORD64 VfHwGetCpuFrequency() {
-	while(!*g_pWowUseTsc) {
-		Sleep(1);
-	}
+typedef DWORD (*PLOAD)();
 
-	if(*g_pSharedPtr) {
-		if(!VirtualFree(*g_pSharedPtr, 0, MEM_RELEASE)) {
+void InitNamPower() {
+	if(*g_pSharedData) {
+		if((*g_pSharedData)->initNamPower) {
+			PLOAD initFn = (PLOAD)GetProcAddress(GetModuleHandle(L"nampower"), "Load");
+
+			if(initFn()) {
+				MessageBox(NULL, L"Error when initializing Nampower", L"VanillaFixes", MB_OK | MB_ICONERROR);
+			}
+		}
+
+		if(!VirtualFree(*g_pSharedData, 0, MEM_RELEASE)) {
 			MessageBox(NULL, L"Failed to clean up remote data", L"VanillaFixes", MB_OK | MB_ICONERROR);
 		}
 
-		*g_pSharedPtr = NULL;
+		*g_pSharedData = NULL;
+	}
+}
+
+/* Hook this function to prevent it from hanging the main thread */
+DWORD64 VfHwGetCpuFrequency() {
+	InitNamPower();
+
+	while(!*g_pWowUseTsc) {
+		Sleep(1);
 	}
 
 	g_mainThreadFinished = TRUE;

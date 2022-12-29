@@ -18,7 +18,9 @@
 typedef struct {
 	/* Stores path to DLL for LoadLibrary */
 	WCHAR pDllPath[MAX_PATH];
+	/* If VfPatcher.dll should initialize Nampower before exiting */
+	BOOL initNamPower;
 } VF_SHARED_DATA, *PVF_SHARED_DATA;
 
 /* This address is never used by the game when VanillaFixes is active */
-static PVF_SHARED_DATA* g_pSharedPtr = (PVF_SHARED_DATA)0x00884060;
+static PVF_SHARED_DATA* g_pSharedData = (PVF_SHARED_DATA)0x00884060;

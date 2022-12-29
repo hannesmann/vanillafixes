@@ -46,6 +46,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	/* Also inject Nampower if present in the game directory */
 	if(GetFileAttributes(pNamPowerPath) != INVALID_FILE_ATTRIBUTES) {
 		injectError = injectError || RemoteLoadLibrary(pNamPowerPath, processInfo.hProcess);
+
+		g_sharedData.initNamPower = TRUE;
+		RemoteSyncData(processInfo.hProcess);
 	}
 
 	if(injectError) {
