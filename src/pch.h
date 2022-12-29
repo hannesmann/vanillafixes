@@ -14,3 +14,11 @@
 	if(!(condition)) { \
 		return MessageBox(NULL, message, L"VanillaFixes", MB_OK | MB_ICONERROR); \
 	}
+
+typedef struct {
+	/* Stores path to DLL for LoadLibrary */
+	WCHAR pDllPath[MAX_PATH];
+} VF_SHARED_DATA, *PVF_SHARED_DATA;
+
+/* This address is never used by the game when VanillaFixes is active */
+static PVF_SHARED_DATA* g_pSharedPtr = (PVF_SHARED_DATA)0x00884060;

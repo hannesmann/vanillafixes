@@ -41,6 +41,14 @@ DWORD64 VfHwGetCpuFrequency() {
 		Sleep(1);
 	}
 
+	if(*g_pSharedPtr) {
+		if(!VirtualFree(*g_pSharedPtr, 0, MEM_RELEASE)) {
+			MessageBox(NULL, L"Failed to clean up remote data", L"VanillaFixes", MB_OK | MB_ICONERROR);
+		}
+
+		*g_pSharedPtr = NULL;
+	}
+
 	g_mainThreadFinished = TRUE;
 
 	/* 1.12 assumes TSC frequency == CPU frequency */

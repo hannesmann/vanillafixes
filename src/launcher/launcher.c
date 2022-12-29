@@ -1,37 +1,7 @@
 #include <shlwapi.h>
+
+#include "sync.c"
 #include "util.c"
-
-int InjectDll(LPWSTR pDllPath, HANDLE hTargetProcess) {
-	int dllPathLen = (wcslen(pDllPath) + 1) * sizeof(WCHAR);
-	LPVOID pRemoteDllPath = VirtualAllocEx(
-		hTargetProcess,
-		NULL,
-		dllPathLen,
-		MEM_RESERVE | MEM_COMMIT,
-		PAGE_READWRITE
-	);
-
-	WriteProcessMemory(hTargetProcess, pRemoteDllPath, pDllPath, dllPathLen, NULL);
-
-	HANDLE hThread =
-		CreateRemoteThread(hTargetProcess, NULL, 0, (LPTHREAD_START_ROUTINE)&LoadLibraryW, pRemoteDllPath, 0, NULL);
-	AssertMessageBox(hThread, L"Failed to create remote thread");
-
-	WaitForSingleObject(hThread, 10000);
-
-	DWORD threadResult = 0;
-	GetExitCodeThread(hThread, &threadResult);
-
-	CloseHandle(hThread);
-
-	AssertMessageBox(VirtualFreeEx(hTargetProcess, pRemoteDllPath, 0, MEM_RELEASE), L"Failed to clean up remote data");
-	AssertMessageBox(threadResult && threadResult != STILL_ACTIVE,
-		L"DllMain failed after injection.\n\n"
-		L"Make sure you have a compatible game client."
-	);
-
-	return 0;
-}
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
 	int cpuInfo[4] = {0};
@@ -72,16 +42,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	AssertMessageBox(processCreated, L"CreateProcess failed for WoW.exe");
 
-	int injectError = InjectDll(pPatcherPath, processInfo.hProcess);
+	int injectError = RemoteLoadLibrary(pPatcherPath, processInfo.hProcess);
 	/* Also inject Nampower if present in the game directory */
 	if(GetFileAttributes(pNamPowerPath) != INVALID_FILE_ATTRIBUTES) {
-		injectError = injectError || InjectDll(pNamPowerPath, processInfo.hProcess);
+		injectError = injectError || RemoteLoadLibrary(pNamPowerPath, processInfo.hProcess);
 	}
 
 	if(injectError) {
 		TerminateProcess(processInfo.hProcess, 0);
 		return injectError;
 	}
+
+	/* Remote data will be freed by VfPatcher.dll */
+	g_pRemoteData = NULL;
 
 	ResumeThread(processInfo.hThread);
 
