@@ -8,7 +8,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	__cpuid(cpuInfo, 0x80000007);
 
     AssertMessageBox(cpuInfo[3] & (1 << 8),
-		L"Your processor does not support the \"Invariant TSC\" feature.\n\n"
+		L"Your processor does not support the \"Invariant TSC\" feature.\r\n\r\n"
 		L"VanillaFixes can only work reliably on modern (2007+) Intel and AMD processors."
 	);
 
@@ -35,14 +35,24 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	startupInfo.cb = sizeof(startupInfo);
 
 	LPWSTR pWowCmdLine = UtilGetWowCmdLine(pWowExePath);
-	DWORD wowCreationFlags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
+	DWORD flags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
 
-	BOOL processCreated =
-		CreateProcess(NULL, pWowCmdLine, NULL, NULL, FALSE, wowCreationFlags, NULL, NULL, &startupInfo, &processInfo);
+	if(!CreateProcess(NULL, pWowCmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &startupInfo, &processInfo)) {
+		LPWSTR errorMessage = UtilGetLastError();
+		WCHAR scratchBuffer[512] = {0};
 
-	AssertMessageBox(processCreated, L"CreateProcess failed for WoW.exe");
+		swprintf(scratchBuffer,
+			512,
+			L"Error creating process: %ls\r\n"
+			L"This issue can occur if you have enabled compatibility mode on the WoW executable.",
+			errorMessage
+		);
+
+		return MessageBox(NULL, scratchBuffer, L"VanillaFixes", MB_OK | MB_ICONERROR);
+	}
 
 	int injectError = RemoteLoadLibrary(pPatcherPath, processInfo.hProcess);
+
 	/* Also inject Nampower if present in the game directory */
 	if(GetFileAttributes(pNamPowerPath) != INVALID_FILE_ATTRIBUTES) {
 		injectError = injectError || RemoteLoadLibrary(pNamPowerPath, processInfo.hProcess);

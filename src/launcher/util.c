@@ -75,3 +75,14 @@ int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue)
 
 	return 0;
 }
+
+LPWSTR UtilGetLastError() {
+	LPWSTR pErrorStr = NULL;
+	DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM;
+
+	if(FormatMessage(flags, NULL, GetLastError(), 0, (LPWSTR)&pErrorStr, 0, NULL)) {
+		return pErrorStr;
+	}
+
+	return L"Unknown error";
+}

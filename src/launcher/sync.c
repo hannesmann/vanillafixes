@@ -33,7 +33,7 @@ int RemoteLoadLibrary(LPWSTR pDllPath, HANDLE hTargetProcess) {
 	CloseHandle(hThread);
 
 	AssertMessageBox(threadResult && threadResult != STILL_ACTIVE,
-		L"DllMain failed after injection.\n\n"
+		L"DllMain failed after injection.\r\n\r\n"
 		L"Make sure you have a compatible game client."
 	);
 
