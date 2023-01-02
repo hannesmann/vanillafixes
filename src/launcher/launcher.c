@@ -7,7 +7,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	int cpuInfo[4] = {0};
 	__cpuid(cpuInfo, 0x80000007);
 
-    AssertMessageBox(cpuInfo[3] & (1 << 8),
+	AssertMessageBox(cpuInfo[3] & (1 << 8),
 		L"Your processor does not support the \"Invariant TSC\" feature.\r\n\r\n"
 		L"VanillaFixes can only work reliably on modern (2007+) Intel and AMD processors."
 	);
@@ -72,7 +72,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	ResumeThread(processInfo.hThread);
 
 	CloseHandle(processInfo.hProcess);
-    CloseHandle(processInfo.hThread);
+	CloseHandle(processInfo.hThread);
 
 	return 0;
 }

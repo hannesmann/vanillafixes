@@ -72,7 +72,7 @@ DWORD64 VfHwGetCpuFrequency() {
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 	g_hSelf = hinstDLL;
 
-    if(fdwReason == DLL_PROCESS_ATTACH) {
+	if(fdwReason == DLL_PROCESS_ATTACH) {
 		if(MH_Initialize() != MH_OK) {
 			return FALSE;
 		}
