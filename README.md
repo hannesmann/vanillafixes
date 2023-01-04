@@ -16,7 +16,7 @@ During startup VanillaFixes will modify timing variables in memory to force the 
 
 ## Compatibility with other mods
 
-* **Nampower:** ~~VanillaFixes.exe will load [Nampower](https://github.com/namreeb/nampower) if the DLL is present in the game directory.~~ This feature will be fixed in the next release.
+* **Nampower:** VanillaFixes.exe will load [Nampower](https://github.com/namreeb/nampower) if the DLL is present in the game directory.
 
 * **FoV changers, large address patchers, etc**: These usually modify WoW.exe and will still work.
 
@@ -24,9 +24,9 @@ During startup VanillaFixes will modify timing variables in memory to force the 
 
 ## Compiling
 
-Building VanillaFixes requires a recent version of the Windows SDK (10.0.22000.0+) and [CMake](https://cmake.org). If you're on Linux, use [msvc-wine](https://github.com/mstorsjo/msvc-wine). Only the [Ninja](https://ninja-build.org) generator has been tested but it should also be possible to build the project as a Visual Studio solution.
+Building VanillaFixes requires a recent version of the Windows SDK (10.0.22000.0+) and [CMake](https://cmake.org). If you're on Linux, use [msvc-wine](https://github.com/mstorsjo/msvc-wine). Ninja (https://ninja-build.org) or Visual Studio can be used to build the project.
 
-Open the x86 VS Native Tools command prompt and run the following commands in the project directory:
+To build with Ninja, open the x86 VS Native Tools command prompt and run the following commands in the project directory:
 ```
 git submodule update --init
 
