@@ -11,6 +11,11 @@ else()
 	message(STATUS "Build type is set to '${CMAKE_BUILD_TYPE}'.")
 endif()
 
+# Set 32-bit platform for Visual Studio generator
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+	set(CMAKE_GENERATOR_PLATFORM Win32)
+endif()
+
 project(vanillafixes LANGUAGES C)
 
 # Check for Microsoft Visual C++
