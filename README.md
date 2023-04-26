@@ -22,6 +22,17 @@ During startup VanillaFixes will modify timing variables in memory to force the 
 
 * **DLL injectors and launchers:** These will only work if they load VfPatcher.dll before the game starts. Injecting at the login screen won't work.
 
+## Installation
+
+1. Extract the zip file and copy all files to the same folder as WoW.exe.
+
+2. Update your WoW shortcut to point to `VanillaFixes.exe` instead of WoW.exe.
+
+### Using a custom executable
+
+If you run WoW from a non-standard executable (for example, WoW_Tweaked.exe or WoWFoV.exe), add the executable name to the end of the command line, like this:
+`"path\to\VanillaFixes.exe" CustomExecutableName.exe`
+
 ## Compiling
 
 Building VanillaFixes requires a recent version of the Windows SDK (10.0.22000.0+) and [CMake](https://cmake.org). If you're on Linux, use [msvc-wine](https://github.com/mstorsjo/msvc-wine). Ninja (https://ninja-build.org) or Visual Studio can be used to build the project.
