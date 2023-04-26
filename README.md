@@ -26,12 +26,12 @@ During startup VanillaFixes will modify timing variables in memory to force the 
 
 1. Extract the zip file and copy all files to the same folder as WoW.exe.
 
-2. Update your WoW shortcut to point to `VanillaFixes.exe` instead of WoW.exe.
+2. Update your WoW shortcut to point to VanillaFixes.exe instead of WoW.exe.
 
-### Using a custom executable
+## Using a custom executable
 
-If you run WoW from a non-standard executable (for example, WoW_Tweaked.exe or WoWFoV.exe), add the executable name to the end of the command line, like this:
-`"path\to\VanillaFixes.exe" CustomExecutableName.exe`
+If you run WoW from a non-standard executable (for example: WoW_Tweaked.exe or WoWFoV.exe) you can add the executable name to the end of the command line (like this:
+`"path\to\VanillaFixes.exe" CustomExecutableName.exe`) or you can drag and drop the executable over VanillaFixes.exe.
 
 ## Compiling
 
