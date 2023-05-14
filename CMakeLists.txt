@@ -2,9 +2,6 @@
 # This is done to ensure that the project will be built using a version of CMake that the project has been tested with.
 cmake_minimum_required(VERSION 3.16...3.26)
 
-# This line sets the project name to "vanillafixes" and specifies that the project is written in the C language.
-project(vanillafixes LANGUAGES C)
-
 # Setting the default build type for the project to "Release".
 # The build type determines the level of optimization and debugging information for the built files.
 # If no build type is specified by the user, it will default to "Release".
@@ -24,6 +21,9 @@ endif()
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
 	set(CMAKE_GENERATOR_PLATFORM Win32)
 endif()
+
+# This line sets the project name to "vanillafixes" and specifies that the project is written in the C language.
+project(vanillafixes LANGUAGES C)
 
 # This checks that the C compiler is Microsoft Visual C++ (MSVC).
 # The project is intended to be built with MSVC, and may not compile correctly with other compilers.
