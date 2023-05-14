@@ -47,8 +47,8 @@ endif()
 # These lines define options to build the DLL and the launcher.
 # They can be set by the user when configuring the project.
 # By default, both the DLL and the launcher will be built.
-set(BUILD_DLL 1 CACHE STRING "Build the DLL (VfPatcher.dll)")
-set(BUILD_LAUNCHER 1 CACHE STRING "Build the launcher (VanillaFixes.exe)")
+option(BUILD_DLL "Build the DLL (VfPatcher.dll)" ON)
+option(BUILD_LAUNCHER "Build the launcher (VanillaFixes.exe)" ON)
 
 # If the BUILD_DLL option is enabled, the subdirectory "src/dll" is added to the build.
 # This directory should contain the source files for the DLL.
