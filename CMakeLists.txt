@@ -2,6 +2,9 @@
 # This is done to ensure that the project will be built using a version of CMake that the project has been tested with.
 cmake_minimum_required(VERSION 3.16...3.26)
 
+# This line sets the project name to "vanillafixes" and specifies that the project is written in the C language.
+project(vanillafixes LANGUAGES C)
+
 # Setting the default build type for the project to "Release".
 # The build type determines the level of optimization and debugging information for the built files.
 # If no build type is specified by the user, it will default to "Release".
@@ -22,15 +25,12 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
 	set(CMAKE_GENERATOR_PLATFORM Win32)
 endif()
 
-# This line sets the project name to "vanillafixes" and specifies that the project is written in the C language.
-project(vanillafixes LANGUAGES C)
-
 # This checks that the C compiler is Microsoft Visual C++ (MSVC).
 # The project is intended to be built with MSVC, and may not compile correctly with other compilers.
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 	message(
 		FATAL_ERROR
-		"VanillaFixes can only be compiled with Microsoft Visual C++.\n"
+		"Microsoft Visual C++ is required to compile VanillaFixes.\n"
 		"If you're running Linux, use Wine with https://github.com/mstorsjo/msvc-wine."
 	)
 endif()
@@ -40,7 +40,7 @@ endif()
 if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
 	message(
 		FATAL_ERROR
-		"64-bit environment detected. Launch CMake with the x86 VS Native Tools command prompt."
+		"A 32-bit environment is required to compile VanillaFixes. Launch CMake with the x86 VS Native Tools command prompt."
 	)
 endif()
 
