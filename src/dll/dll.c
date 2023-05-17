@@ -34,8 +34,10 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter)
 	*g_pWowTimerTicksPerSecond = CpuCalibrateTsc();
 	*g_pWowTimerToMilliseconds = 1.0 / (*g_pWowTimerTicksPerSecond * 0.001);
 
-	// Align TSC with GetTickCount64 for CHECK_TIMING_VALUES
-	*g_pWowTimerOffset = GetTickCount64() - (fnWowReadTsc() * *g_pWowTimerToMilliseconds);
+	// Align the timestamp counter with GetTickCount(), because Vanilla WoW uses GetTickCount by default.
+	// Also "GetTickCount64()" is not supported on Windows versions older then Vista.
+	*g_pWowTimerOffset = GetTickCount() - (fnWowReadTsc() * *g_pWowTimerToMilliseconds);
+
 	*g_pWowUseTsc = TRUE;
 
 	while (!g_mainThreadFinished)
