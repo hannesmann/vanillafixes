@@ -11,14 +11,14 @@ BOOL UtilSetPowerThrottlingState(ULONG feature, BOOL enable)
 	{
 		HMODULE hKernel32 = GetModuleHandle(L"kernel32"); // Get a handle to the kernel32 module.
 
-		// If getting the module handle failed, return FALSE to indicate an error.
-		if (!hKernel32)
+		// Attempt to get the address of the SetProcessInformation function.
+		fnSetProcessInformation = (PSET_PROCESS_INFORMATION)GetProcAddress(hKernel32, "SetProcessInformation");
+
+		// If getting the function address failed, return FALSE to indicate an error.
+		if (!fnSetProcessInformation)
 		{
 			return FALSE;
 		}
-
-		// Attempt to get the address of the SetProcessInformation function.
-		fnSetProcessInformation = (PSET_PROCESS_INFORMATION)GetProcAddress(hKernel32, "SetProcessInformation");
 	}
 
 	// If the SetProcessInformation function was found, use it to set the power throttling state.
