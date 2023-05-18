@@ -54,3 +54,6 @@ dkms.conf
 # CMake build directory
 build/
 bin/
+
+# Notepad++ temp files
+*.bak

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16...3.25)
+cmake_minimum_required(VERSION 3.16...3.26)
 
 # Set the default build type to "Release"
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -22,7 +22,7 @@ project(vanillafixes LANGUAGES C)
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 	message(
 		FATAL_ERROR
-		"VanillaFixes can only be compiled with Microsoft Visual C++.\n"
+		"Microsoft Visual C++ is required to compile VanillaFixes.\n"
 		"If you're running Linux, use Wine with https://github.com/mstorsjo/msvc-wine."
 	)
 endif()
@@ -31,16 +31,17 @@ endif()
 if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
 	message(
 		FATAL_ERROR
-		"64-bit environment detected. Launch CMake with the x86 VS Native Tools command prompt."
+		"A 32-bit environment is required to compile VanillaFixes. Launch CMake with the x86 VS Native Tools command prompt."
 	)
 endif()
 
-set(BUILD_DLL 1 CACHE STRING "Build the DLL (VfPatcher.dll)")
-set(BUILD_LAUNCHER 1 CACHE STRING "Build the launcher (VanillaFixes.exe)")
+option(BUILD_DLL "Build the DLL (VfPatcher.dll)" ON)
+option(BUILD_LAUNCHER "Build the launcher (VanillaFixes.exe)" ON)
 
 if(BUILD_DLL)
 	add_subdirectory(src/dll)
 endif()
+
 if(BUILD_LAUNCHER)
 	add_subdirectory(src/launcher)
 endif()
