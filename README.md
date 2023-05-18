@@ -2,17 +2,15 @@
 
 A client modification for World of Warcraft 1.12.1 to eliminate stutter and animation lag.
 
-Download here: [Releases](https://github.com/hannesmann/vanillafixes/releases)
+**Download here:** [Releases](https://github.com/hannesmann/vanillafixes/releases)
 
 ![Comparison](docs/comparison.png)
 
-## Will I get banned for using this?
+## Installation
 
-As always, you should use tools like these **at your own risk**, but I haven't found any evidence that VanillaFixes could trigger the Warden anticheat.
+1. Extract the zip file and copy all files to the same folder as WoW.exe.
 
-VanillaFixes does not modify the game executable, permanently modify any game code, hook any Windows API functions or keep running in the background during gameplay. As soon as you see the login screen it has already been unloaded.
-
-During startup VanillaFixes will modify timing variables in memory to force the game to use a high precision timer. Warden has a check to verify that time functions in the game are behaving as expected (to detect speedhacks, etc) and it's possible that these changes could cause it to fail, but in my testing I found no evidence for that being the case ([test on VMaNGOS](docs/vmangos-timing-check.png)).
+2. Update your WoW shortcut to point to VanillaFixes.exe instead of WoW.exe.
 
 ## Compatibility with other mods
 
@@ -22,16 +20,18 @@ During startup VanillaFixes will modify timing variables in memory to force the 
 
 * **DLL injectors and launchers:** These will only work if they load VfPatcher.dll before the game starts. Injecting at the login screen won't work.
 
-## Installation
-
-1. Extract the zip file and copy all files to the same folder as WoW.exe.
-
-2. Update your WoW shortcut to point to VanillaFixes.exe instead of WoW.exe.
-
 ## Using a custom executable
 
 If you run WoW from a non-standard executable (for example: WoW_Tweaked.exe or WoWFoV.exe) you can add the executable name to the end of the command line (like this:
 `"path\to\VanillaFixes.exe" CustomExecutableName.exe`) or you can drag and drop the executable over VanillaFixes.exe.
+
+## Will I get banned for using this?
+
+As always, you should use tools like these **at your own risk**, but I haven't found any evidence that VanillaFixes could trigger the Warden anticheat.
+
+VanillaFixes does not modify the game executable, permanently modify any game code, hook any Windows API functions or keep running in the background during gameplay. As soon as you see the login screen it has already been unloaded.
+
+During startup VanillaFixes will modify timing variables in memory to force the game to use a high precision timer. Warden has a check to verify that time functions in the game are behaving as expected (to detect speedhacks, etc) and it's possible that these changes could cause it to fail, but in my testing I found no evidence for that being the case ([test on VMaNGOS](docs/vmangos-timing-check.png)).
 
 ## Compiling
 
