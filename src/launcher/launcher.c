@@ -45,6 +45,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	PROCESS_INFORMATION processInfo = { 0 };
 
 	startupInfo.cb = sizeof(startupInfo);
+	// Pass shortcut properties to WoW executable
+	startupInfo.wShowWindow = nCmdShow;
+	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
 
 	// Prepare command line arguments for WoW
 	LPWSTR pWowCmdLine = UtilGetWowCmdLine(pWowExePath);
