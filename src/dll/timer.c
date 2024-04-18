@@ -6,11 +6,45 @@
 
 #include "offsets_1_12_1.h"
 
-// Use timeBeginPeriod to increase process timer resolution
+typedef NTSTATUS (NTAPI *PNT_QUERY_TIMER_RESOLUTION)(PULONG, PULONG, PULONG);
+typedef NTSTATUS (NTAPI *PNT_SET_TIMER_RESOLUTION)(ULONG, BOOLEAN, PULONG);
+
+// Use NtSetTimerResolution (if available) or timeBeginPeriod to increase process timer resolution
 static BOOL IncreaseTimerResolution(ULONG maxRequestedResolution) {
-	UINT resolution = max(1, maxRequestedResolution / 10000);
-	DebugOutput(L"VanillaFixes: Using timeBeginPeriod to increase timer resolution (desired=%u)", resolution);
-	return timeBeginPeriod(resolution) == TIMERR_NOERROR;
+	static PNT_QUERY_TIMER_RESOLUTION fnNtQueryTimerResolution = NULL;
+	static PNT_SET_TIMER_RESOLUTION fnNtSetTimerResolution = NULL;
+
+	// If the NT timer functions are not already loaded, attempt to load them
+	if(!fnNtQueryTimerResolution || !fnNtSetTimerResolution) {
+		HMODULE hNtDll = GetModuleHandle(L"ntdll");
+		fnNtQueryTimerResolution = (PNT_QUERY_TIMER_RESOLUTION)GetProcAddress(hNtDll, "NtQueryTimerResolution");
+		fnNtSetTimerResolution = (PNT_SET_TIMER_RESOLUTION)GetProcAddress(hNtDll, "NtSetTimerResolution");
+
+		// Use timeBeginPeriod if NtSetTimerResolution is unavailable
+		if(!fnNtQueryTimerResolution || !fnNtSetTimerResolution) {
+			UINT resolution = max(1, maxRequestedResolution / 10000);
+			DebugOutput(L"VanillaFixes: Using timeBeginPeriod (desired=%u)", resolution);
+			return timeBeginPeriod(resolution) == TIMERR_NOERROR;
+		}
+	}
+
+	ULONG minSupportedResolution, maxSupportedResolution, currentResolution;
+	fnNtQueryTimerResolution(&minSupportedResolution, &maxSupportedResolution, &currentResolution);
+
+	ULONG desiredResolution = max(maxSupportedResolution, maxRequestedResolution);
+	DebugOutput(L"VanillaFixes: Using NT timer functions (min=%lu max=%lu current=%lu desired=%lu)",
+		minSupportedResolution, maxSupportedResolution, currentResolution, desiredResolution);
+
+	if(fnNtSetTimerResolution(desiredResolution, TRUE, &currentResolution) != 0) {
+		DebugOutput(L"VanillaFixes: NtSetTimerResolution failed!");
+
+		// Fall back to timeBeginPeriod if NtSetTimerResolution failed
+		UINT resolution = max(1, maxRequestedResolution / 10000);
+		DebugOutput(L"VanillaFixes: Using timeBeginPeriod (desired=%u)", resolution);
+		return timeBeginPeriod(resolution) == TIMERR_NOERROR;
+	}
+
+	return TRUE;
 }
 
 inline void CpuTimeSample(PLARGE_INTEGER pQpc, PDWORD64 pTsc) {
