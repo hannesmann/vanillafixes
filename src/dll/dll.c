@@ -72,6 +72,13 @@ void InitNamPower() {
 
 // Hooked function to prevent main thread from hanging.
 DWORD64 VfHwGetCpuFrequency() {
+	// The game has built-in UI scaling which means Windows DPI scaling is unnecessary
+	// DXVK already enabled this by default (d3d9.dpiAware)
+	if(!SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
+		// Try the old API if the new one is unsupported
+		SetProcessDPIAware();
+	}
+
 	InitNamPower();
 
 	while(!*g_pWowUseTsc) {
