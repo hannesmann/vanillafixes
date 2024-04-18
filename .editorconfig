@@ -9,3 +9,6 @@ tab_width = 4
 
 insert_final_newline = false
 trim_trailing_whitespace = true
+
+[*.{ini,conf}]
+end_of_line = crlf
