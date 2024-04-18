@@ -7,6 +7,9 @@
 #include "sync.c"
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR pCmdLine, _In_ int nCmdShow) {
+	// Make sure dialog boxes are DPI aware
+	UtilSetProcessDPIAware();
+
 	// Gather CPU info
 	int cpuInfo[4] = {0};
 	__cpuid(cpuInfo, 0x80000007);

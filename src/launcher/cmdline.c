@@ -3,11 +3,11 @@
 
 typedef struct {
 	// Arguments that should be passed to WoW
-	LPCWSTR *pWowArgs;
+	LPWSTR *pWowArgs;
 	// Number of arguments in pWowArgs
 	int nWowArgs;
 	// The game executable path
-	LPCWSTR pWowExePath;
+	LPWSTR pWowExePath;
 } VF_CMDLINE_PARSE_DATA, *PVF_CMDLINE_PARSE_DATA;
 
 void CmdLineAppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput) {

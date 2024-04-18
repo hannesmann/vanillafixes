@@ -1,7 +1,9 @@
 #pragma once
 
 #include <windows.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 
 #define AssertMessageBox(condition, message) \
 	if(!(condition)) { \
@@ -49,4 +51,34 @@ static LPWSTR UtilGetLastError() {
 	}
 
 	return L"Unknown error";
+}
+
+typedef BOOL (WINAPI *PSET_PROCESS_DPI_AWARENESS_CONTEXT)(DPI_AWARENESS_CONTEXT);
+
+// Set process DPI awareness using SetProcessDpiAwarenessContext (if available) or SetProcessDPIAware
+static void UtilSetProcessDPIAware() {
+	static PSET_PROCESS_DPI_AWARENESS_CONTEXT fnSetProcessDPIAwarenessContext = NULL;
+
+	// If the SetProcessDpiAwarenessContext function is not already loaded, attempt to load it
+	if(!fnSetProcessDPIAwarenessContext) {
+		// Make sure user32 is loaded
+		LoadLibrary(L"user32");
+		HMODULE hUser32 = GetModuleHandle(L"user32");
+		fnSetProcessDPIAwarenessContext = (PSET_PROCESS_DPI_AWARENESS_CONTEXT)GetProcAddress(hUser32, "SetProcessDpiAwarenessContext");
+
+		// If getting the function address failed, fall back to the old API
+		if(fnSetProcessDPIAwarenessContext) {
+			DebugOutput(L"VanillaFixes: Using SetProcessDpiAwarenessContext to set DPI scaling mode");
+			if(!fnSetProcessDPIAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
+				DebugOutput(L"VanillaFixes: SetProcessDpiAwarenessContext failed!");
+				// If DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 is not supported, fall back to the old API
+				SetProcessDPIAware();
+				DebugOutput(L"VanillaFixes: Using SetProcessDPIAware to set DPI scaling mode");
+			}
+		}
+		else {
+			SetProcessDPIAware();
+			DebugOutput(L"VanillaFixes: Using SetProcessDPIAware to set DPI scaling mode");
+		}
+	}
 }

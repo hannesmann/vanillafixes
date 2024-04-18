@@ -4,6 +4,7 @@
 #include <processthreadsapi.h>
 #include <winternl.h>
 
+#include "util.h"
 #include "offsets_1_12_1.h"
 
 typedef NTSTATUS (NTAPI *PNT_QUERY_TIMER_RESOLUTION)(PULONG, PULONG, PULONG);
