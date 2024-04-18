@@ -17,10 +17,9 @@ BOOL RemoteSyncData(HANDLE hTargetProcess) {
 		);
 
 		// Check if VirtualAllocEx was successful
-		if(g_pRemoteData == NULL) {
+		if(!g_pRemoteData) {
 			return FALSE;
 		}
-
 		// Write the address of the shared data structure to the target process's memory
 		if(!WriteProcessMemory(hTargetProcess, g_pSharedData, &g_pRemoteData, sizeof(PVF_SHARED_DATA*), NULL)) {
 			return FALSE;
@@ -38,7 +37,7 @@ BOOL RemoteSyncData(HANDLE hTargetProcess) {
 // Function to load a DLL into the target process
 int RemoteLoadLibrary(LPWSTR pDllPath, HANDLE hTargetProcess) {
 	// Copy the DLL path to the shared data structure
-	StrCpy(g_sharedData.pDllPath, pDllPath);
+	wcscpy(g_sharedData.pDllPath, pDllPath);
 
 	// Assert that the shared data was successfully written to the target process's memory
 	AssertMessageBox(RemoteSyncData(hTargetProcess), L"Failed to write process memory (pDllPath)");

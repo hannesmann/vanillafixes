@@ -1,11 +1,14 @@
 #include <shlwapi.h>
+#include <stdlib.h>
 
+#include "util.h"
+
+#include "cmdline.c"
 #include "sync.c"
-#include "util.c"
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR pCmdLine, _In_ int nCmdShow) {
 	// Gather CPU info
-	int cpuInfo[4] = { 0 };
+	int cpuInfo[4] = {0};
 	__cpuid(cpuInfo, 0x80000007);
 
 	// Check if the CPU supports the "Invariant TSC" feature
@@ -14,12 +17,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		L"VanillaFixes can only work reliably on modern (2007+) Intel and AMD processors."
 	);
 
-	LPWSTR pWowDirectory = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-	if(pWowDirectory == NULL) {
-		MessageBox(NULL, L"Failed to allocate memory.", L"VanillaFixes", MB_OK | MB_ICONERROR);
-		return 1;
-	}
-
+	LPWSTR pWowDirectory = malloc(MAX_PATH * sizeof(WCHAR));
 	GetModuleFileName(NULL, pWowDirectory, MAX_PATH);
 
 	// Check if the buffer was large enough
@@ -33,14 +31,16 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	LPWSTR pPatcherPath = UtilGetPath(pWowDirectory, L"VfPatcher.dll");
 	LPWSTR pNamPowerPath = UtilGetPath(pWowDirectory, L"nampower.dll");
 
+	free(pWowDirectory);
+
 	// Check if the necessary files exist
 	AssertMessageBox(GetFileAttributes(pWowExePath) != INVALID_FILE_ATTRIBUTES,
 		L"WoW.exe not found. Extract VanillaFixes into the same directory as the game.");
 	AssertMessageBox(GetFileAttributes(pPatcherPath) != INVALID_FILE_ATTRIBUTES,
 		L"VfPatcher.dll not found. Extract all files into the game directory.");
 
-	STARTUPINFO startupInfo = { 0 };
-	PROCESS_INFORMATION processInfo = { 0 };
+	STARTUPINFO startupInfo = {0};
+	PROCESS_INFORMATION processInfo = {0};
 
 	startupInfo.cb = sizeof(startupInfo);
 	// Pass shortcut properties to WoW executable
@@ -48,23 +48,34 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
 
 	// Prepare command line arguments for WoW
-	LPWSTR pWowCmdLine = UtilGetWowCmdLine(pWowExePath);
-	DWORD flags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
+	VF_CMDLINE_PARSE_DATA data = {0};
+	data.pWowExePath = pWowExePath;
+	CmdLineParse(__argc, __wargv, &data);
+	LPWSTR pWowCmdLine = CmdLineFormat(&data);
 
-	// Create the WoW process
+	// Create the game process
+	DWORD flags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
 	if(!CreateProcess(NULL, pWowCmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &startupInfo, &processInfo)) {
 		LPWSTR errorMessage = UtilGetLastError();
-		WCHAR scratchBuffer[512] = { 0 };
 
-		swprintf(scratchBuffer,
+		swprintf(msgBuffer,
 			512,
 			L"Error creating process: %ls\r\n"
 			L"This issue can occur if you have enabled compatibility mode on the WoW executable.",
 			errorMessage
 		);
 
-		return MessageBox(NULL, scratchBuffer, L"VanillaFixes", MB_OK | MB_ICONERROR);
+		return MessageBox(NULL, msgBuffer, L"VanillaFixes", MB_OK | MB_ICONERROR);
 	}
+
+	free(pWowCmdLine);
+	for(int i = 0; i < data.nWowArgs; i++) {
+		free(data.pWowArgs[i]);
+	}
+	if(data.pWowExePath != pWowExePath) {
+		free(data.pWowExePath);
+	}
+	free(pWowExePath);
 
 	int injectError = RemoteLoadLibrary(pPatcherPath, processInfo.hProcess);
 
@@ -75,6 +86,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		g_sharedData.initNamPower = TRUE;
 		RemoteSyncData(processInfo.hProcess);
 	}
+
+	free(pNamPowerPath);
+	free(pPatcherPath);
 
 	if(injectError) {
 		TerminateProcess(processInfo.hProcess, 0);

@@ -1,51 +1,50 @@
 #include <MinHook.h>
-#include <mmsystem.h>
+#include <windows.h>
 
-#include "offsets.h"
+#include "offsets_1_12_1.h"
 
-#include "cpu.c"
-#include "util.c"
+#include "power.c"
+#include "timer.c"
+#include "util.h"
 
-// Define PLOAD as a pointer to a function that takes no arguments and returns a DWORD.
-typedef DWORD(*PLOAD)();
-
-// Handle to the DLL module.
+// Handle to this module, for unloading on exit
 static HMODULE g_hSelf = NULL;
 
-// Boolean flag to indicate whether the main thread has finished execution.
-static volatile BOOL g_mainThreadFinished = FALSE; // declared as volatile because it is shared between threads
+// Flag to indicate whether the main thread has finished execution
+static volatile BOOL g_mainThreadFinished = FALSE;
 
-// Function to disable Windows throttling for better timing accuracy.
-void DisableWindowsThrottling() {
-	// This reduces the system timer resolution, improving accuracy of timeouts.
-	timeBeginPeriod(1);
-
-	// Disable power throttling for the process.
-	UtilSetPowerThrottlingState(PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION, FALSE);
-	UtilSetPowerThrottlingState(PROCESS_POWER_THROTTLING_EXECUTION_SPEED, FALSE);
-}
-
-// Hooked function to apply our changes to the timekeeper.
+// Hook OsTimeManager::TimeKeeper to apply our changes and prevent it from running in the background during gameplay
 DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
-	DisableWindowsThrottling();
+	// Increase the process timer resolution up to a cap of 0.5 ms
+	IncreaseTimerResolution(5000);
 
+	// Disable Windows 11 power throttling for the process
+	SetPowerThrottlingState(PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION, FALSE);
+	SetPowerThrottlingState(PROCESS_POWER_THROTTLING_EXECUTION_SPEED, FALSE);
+
+	// Calibrate the game timer using QueryPerformanceFrequency
+	// This assumes the TSC is invariant
 	*g_pWowTimerTicksPerSecond = CpuCalibrateTsc();
-	*g_pWowTimerToMilliseconds = 1.0 / (*g_pWowTimerTicksPerSecond * 0.001);
+	DebugOutput(L"VanillaFixes: timerTicksPerSecond=%lld", *g_pWowTimerTicksPerSecond);
+	*g_pWowTimerToMilliseconds = 1000.0 / *g_pWowTimerTicksPerSecond;
+	*g_pWowUseTSC = TRUE;
 
-	// Align the timestamp counter with GetTickCount(), because Vanilla WoW uses GetTickCount by default.
-	// Also "GetTickCount64()" is not supported on Windows versions older then Vista.
-	*g_pWowTimerOffset = GetTickCount() - (fnWowReadTsc() * *g_pWowTimerToMilliseconds);
-
-	*g_pWowUseTsc = TRUE;
+	// Align TSC with GTC
+	*g_pWowTimerOffset = GetTickCount() - (fnWowReadTSC() * *g_pWowTimerToMilliseconds);
+	DebugOutput(L"VanillaFixes: timerOffset=%.0lf", *g_pWowTimerOffset);
 
 	while(!g_mainThreadFinished) {
 		Sleep(1);
 	}
 
+	DebugOutput(L"VanillaFixes: Done! Unloading from process %u...", GetCurrentProcessId());
 	FreeLibraryAndExitThread(g_hSelf, 0);
 }
 
-// Function to initialize Nampower.
+// Some mods such as Nampower are initialized by a function call rather than DLL_PROCESS_ATTACH
+typedef DWORD (*PLOAD)();
+
+// Function to initialize Nampower
 void InitNamPower() {
 	if(*g_pSharedData) {
 		if((*g_pSharedData)->initNamPower) {
@@ -70,7 +69,7 @@ void InitNamPower() {
 	}
 }
 
-// Hooked function to prevent main thread from hanging.
+// Hooked function to prevent main thread from hanging
 DWORD64 VfHwGetCpuFrequency() {
 	// The game has built-in UI scaling which means Windows DPI scaling is unnecessary
 	// DXVK already enabled this by default (d3d9.dpiAware)
@@ -81,7 +80,8 @@ DWORD64 VfHwGetCpuFrequency() {
 
 	InitNamPower();
 
-	while(!*g_pWowUseTsc) {
+	// Wait until VfTimeKeeperThreadProc has finished calibration and applied changes to the game timer
+	while(!*g_pWowUseTSC) {
 		Sleep(1);
 	}
 
@@ -91,7 +91,6 @@ DWORD64 VfHwGetCpuFrequency() {
 	return *g_pWowTimerTicksPerSecond;
 }
 
-// DLL entry point.
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 	g_hSelf = hinstDLL;
 
@@ -104,7 +103,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 			if(MH_CreateHook(fnWowTimeKeeperThreadProc, &VfTimeKeeperThreadProc, NULL) != MH_OK) {
 				return FALSE;
 			}
-
 			if(MH_CreateHook(fnWowHwGetCpuFrequency, &VfHwGetCpuFrequency, NULL) != MH_OK) {
 				return FALSE;
 			}
