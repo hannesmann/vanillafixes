@@ -3,8 +3,7 @@
 #include "sync.c"
 #include "util.c"
 
-int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR pCmdLine, _In_ int nCmdShow)
-{
+int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR pCmdLine, _In_ int nCmdShow) {
 	// Gather CPU info
 	int cpuInfo[4] = { 0 };
 	__cpuid(cpuInfo, 0x80000007);
@@ -16,8 +15,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	);
 
 	LPWSTR pWowDirectory = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-	if (pWowDirectory == NULL)
-	{
+	if(pWowDirectory == NULL) {
 		MessageBox(NULL, L"Failed to allocate memory.", L"VanillaFixes", MB_OK | MB_ICONERROR);
 		return 1;
 	}
@@ -54,8 +52,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	DWORD flags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
 
 	// Create the WoW process
-	if (!CreateProcess(NULL, pWowCmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &startupInfo, &processInfo))
-	{
+	if(!CreateProcess(NULL, pWowCmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &startupInfo, &processInfo)) {
 		LPWSTR errorMessage = UtilGetLastError();
 		WCHAR scratchBuffer[512] = { 0 };
 
@@ -72,16 +69,14 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	int injectError = RemoteLoadLibrary(pPatcherPath, processInfo.hProcess);
 
 	// Also inject Nampower if present in the game directory
-	if (GetFileAttributes(pNamPowerPath) != INVALID_FILE_ATTRIBUTES)
-	{
+	if(GetFileAttributes(pNamPowerPath) != INVALID_FILE_ATTRIBUTES) {
 		injectError = injectError || RemoteLoadLibrary(pNamPowerPath, processInfo.hProcess);
 
 		g_sharedData.initNamPower = TRUE;
 		RemoteSyncData(processInfo.hProcess);
 	}
 
-	if (injectError)
-	{
+	if(injectError) {
 		TerminateProcess(processInfo.hProcess, 0);
 		return injectError;
 	}

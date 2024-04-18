@@ -1,32 +1,26 @@
 #include <shlwapi.h>
 
-
-typedef struct
-{
-	LPCWSTR* pWowArgs;
+typedef struct {
+	LPCWSTR *pWowArgs;
 	int nWowArgs;
 
 	LPCWSTR pWowExePath;
-} VF_CMDLINE_PARSE_DATA, * PVF_CMDLINE_PARSE_DATA;
+} VF_CMDLINE_PARSE_DATA, *PVF_CMDLINE_PARSE_DATA;
 
-BOOL CmdLineContainsWowExe(LPWSTR pArg)
-{
+BOOL CmdLineContainsWowExe(LPWSTR pArg) {
 	return !!StrStrIW(pArg, L".exe");
 }
 
-BOOL CmdLineContainsVfExe(LPWSTR pArg)
-{
+BOOL CmdLineContainsVfExe(LPWSTR pArg) {
 	return !!StrStrIW(pArg, L"VanillaFixes.exe");
 }
 
-void CmdLineAppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput)
-{
+void CmdLineAppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput) {
 	int argsBufSize = (pOutput->nWowArgs + 1) * sizeof(LPWSTR);
 
-	LPWSTR* temp = pOutput->pWowArgs;
+	LPWSTR *temp = pOutput->pWowArgs;
 	temp = HeapReAlloc(GetProcessHeap(), 0, temp, argsBufSize);
-	if (temp == NULL)
-	{
+	if(temp == NULL) {
 		return;
 	}
 
@@ -34,8 +28,7 @@ void CmdLineAppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput)
 	pOutput->nWowArgs++;
 
 	LPWSTR pEscapedArg = HeapAlloc(GetProcessHeap(), 0, (wcslen(pArg) + 3 + 2) * sizeof(WCHAR)); // +2 for potential quotes
-	if (!pEscapedArg)
-	{
+	if(!pEscapedArg) {
 		return;
 	}
 
@@ -45,29 +38,22 @@ void CmdLineAppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput)
 	pOutput->pWowArgs[pOutput->nWowArgs - 1] = pEscapedArg;
 }
 
-void CmdLineParse(int argc, WCHAR** argv, PVF_CMDLINE_PARSE_DATA pOutput)
-{
-	for (int i = 1; i < argc; ++i)
-	{
-		if (CmdLineContainsWowExe(argv[i]))
-		{
-			if (!CmdLineContainsVfExe(argv[i]))
-			{
+void CmdLineParse(int argc, WCHAR **argv, PVF_CMDLINE_PARSE_DATA pOutput) {
+	for(int i = 1; i < argc; ++i) {
+		if(CmdLineContainsWowExe(argv[i])) {
+			if(!CmdLineContainsVfExe(argv[i])) {
 				pOutput->pWowExePath = argv[i];
 			}
 		}
-		else
-		{
+		else {
 			CmdLineAppendArg(argv[i], pOutput);
 		}
 	}
 }
 
-LPWSTR CmdLineFormat(PVF_CMDLINE_PARSE_DATA pInput)
-{
+LPWSTR CmdLineFormat(PVF_CMDLINE_PARSE_DATA pInput) {
 	LPWSTR pCmdLine = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-	if (!pCmdLine)
-	{
+	if(!pCmdLine) {
 		return NULL;
 	}
 
@@ -77,16 +63,13 @@ LPWSTR CmdLineFormat(PVF_CMDLINE_PARSE_DATA pInput)
 	PathQuoteSpaces(pCmdLine);
 
 	int requiredChars = wcslen(pCmdLine) + 1;
-	for (int i = 0; i < pInput->nWowArgs; ++i)
-	{
+	for(int i = 0; i < pInput->nWowArgs; ++i) {
 		requiredChars += 1 + wcslen(pInput->pWowArgs[i]);
 	}
 
-	if (requiredChars > MAX_PATH)
-	{
+	if(requiredChars > MAX_PATH) {
 		LPWSTR temp = HeapReAlloc(GetProcessHeap(), 0, pCmdLine, requiredChars * sizeof(WCHAR));
-		if (temp == NULL)
-		{
+		if (temp == NULL) {
 			return pCmdLine;
 		}
 
@@ -94,8 +77,7 @@ LPWSTR CmdLineFormat(PVF_CMDLINE_PARSE_DATA pInput)
 	}
 
 	LPWSTR pCurrent = pCmdLine + wcslen(pCmdLine);
-	for (int i = 0; i < pInput->nWowArgs; ++i)
-	{
+	for(int i = 0; i < pInput->nWowArgs; ++i) {
 		*(pCurrent++) = L' ';
 		StrCpy(pCurrent, pInput->pWowArgs[i]);
 		pCurrent += wcslen(pInput->pWowArgs[i]);

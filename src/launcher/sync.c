@@ -1,14 +1,12 @@
 
 // Global shared data variable and remote data pointer
-static VF_SHARED_DATA g_sharedData = { 0 };
+static VF_SHARED_DATA g_sharedData = {0};
 static PVF_SHARED_DATA g_pRemoteData = NULL;
 
 // Function to synchronize shared data with the target process
-BOOL RemoteSyncData(HANDLE hTargetProcess)
-{
+BOOL RemoteSyncData(HANDLE hTargetProcess) {
 	// If the remote data pointer has not been allocated yet
-	if (!g_pRemoteData)
-	{
+	if(!g_pRemoteData) {
 		// Allocate memory in the target process for the shared data structure
 		g_pRemoteData = VirtualAllocEx(
 			hTargetProcess,
@@ -19,21 +17,18 @@ BOOL RemoteSyncData(HANDLE hTargetProcess)
 		);
 
 		// Check if VirtualAllocEx was successful
-		if (g_pRemoteData == NULL)
-		{
+		if(g_pRemoteData == NULL) {
 			return FALSE;
 		}
 
 		// Write the address of the shared data structure to the target process's memory
-		if (!WriteProcessMemory(hTargetProcess, g_pSharedData, &g_pRemoteData, sizeof(PVF_SHARED_DATA*), NULL))
-		{
+		if(!WriteProcessMemory(hTargetProcess, g_pSharedData, &g_pRemoteData, sizeof(PVF_SHARED_DATA*), NULL)) {
 			return FALSE;
 		}
 	}
 
 	// Write the shared data to the target process's memory
-	if (!WriteProcessMemory(hTargetProcess, g_pRemoteData, &g_sharedData, sizeof(VF_SHARED_DATA), NULL))
-	{
+	if(!WriteProcessMemory(hTargetProcess, g_pRemoteData, &g_sharedData, sizeof(VF_SHARED_DATA), NULL)) {
 		return FALSE;
 	}
 
@@ -41,8 +36,7 @@ BOOL RemoteSyncData(HANDLE hTargetProcess)
 }
 
 // Function to load a DLL into the target process
-int RemoteLoadLibrary(LPWSTR pDllPath, HANDLE hTargetProcess)
-{
+int RemoteLoadLibrary(LPWSTR pDllPath, HANDLE hTargetProcess) {
 	// Copy the DLL path to the shared data structure
 	StrCpy(g_sharedData.pDllPath, pDllPath);
 

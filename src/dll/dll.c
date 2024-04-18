@@ -16,8 +16,7 @@ static HMODULE g_hSelf = NULL;
 static volatile BOOL g_mainThreadFinished = FALSE; // declared as volatile because it is shared between threads
 
 // Function to disable Windows throttling for better timing accuracy.
-void DisableWindowsThrottling()
-{
+void DisableWindowsThrottling() {
 	// This reduces the system timer resolution, improving accuracy of timeouts.
 	timeBeginPeriod(1);
 
@@ -27,8 +26,7 @@ void DisableWindowsThrottling()
 }
 
 // Hooked function to apply our changes to the timekeeper.
-DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter)
-{
+DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
 	DisableWindowsThrottling();
 
 	*g_pWowTimerTicksPerSecond = CpuCalibrateTsc();
@@ -40,8 +38,7 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter)
 
 	*g_pWowUseTsc = TRUE;
 
-	while (!g_mainThreadFinished)
-	{
+	while(!g_mainThreadFinished) {
 		Sleep(1);
 	}
 
@@ -49,29 +46,23 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter)
 }
 
 // Function to initialize Nampower.
-void InitNamPower()
-{
-	if (*g_pSharedData)
-	{
-		if ((*g_pSharedData)->initNamPower)
-		{
+void InitNamPower() {
+	if(*g_pSharedData) {
+		if((*g_pSharedData)->initNamPower) {
 			PLOAD initFn = (PLOAD)GetProcAddress(GetModuleHandle(L"nampower"), "Load");
 
 			// Check if GetProcAddress returned NULL
-			if (initFn == NULL)
-			{
+			if(!initFn) {
 				MessageBox(NULL, L"Failed to get address of Load function", L"VanillaFixes", MB_OK | MB_ICONERROR);
 				return;
 			}
 
-			if (initFn())
-			{
+			if(initFn()) {
 				MessageBox(NULL, L"Error when initializing Nampower", L"VanillaFixes", MB_OK | MB_ICONERROR);
 			}
 		}
 
-		if (!VirtualFree(*g_pSharedData, 0, MEM_RELEASE))
-		{
+		if(!VirtualFree(*g_pSharedData, 0, MEM_RELEASE)) {
 			MessageBox(NULL, L"Failed to clean up remote data", L"VanillaFixes", MB_OK | MB_ICONERROR);
 		}
 
@@ -80,12 +71,10 @@ void InitNamPower()
 }
 
 // Hooked function to prevent main thread from hanging.
-DWORD64 VfHwGetCpuFrequency()
-{
+DWORD64 VfHwGetCpuFrequency() {
 	InitNamPower();
 
-	while (!*g_pWowUseTsc)
-	{
+	while(!*g_pWowUseTsc) {
 		Sleep(1);
 	}
 
@@ -96,38 +85,30 @@ DWORD64 VfHwGetCpuFrequency()
 }
 
 // DLL entry point.
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 	g_hSelf = hinstDLL;
 
-	switch (fdwReason)
-	{
-		case DLL_PROCESS_ATTACH:
-		{
-			if (MH_Initialize() != MH_OK)
-			{
+	switch(fdwReason) {
+		case DLL_PROCESS_ATTACH: {
+			if(MH_Initialize() != MH_OK) {
 				return FALSE;
 			}
 
-			if (MH_CreateHook(fnWowTimeKeeperThreadProc, &VfTimeKeeperThreadProc, NULL) != MH_OK)
-			{
+			if(MH_CreateHook(fnWowTimeKeeperThreadProc, &VfTimeKeeperThreadProc, NULL) != MH_OK) {
 				return FALSE;
 			}
 
-			if (MH_CreateHook(fnWowHwGetCpuFrequency, &VfHwGetCpuFrequency, NULL) != MH_OK)
-			{
+			if(MH_CreateHook(fnWowHwGetCpuFrequency, &VfHwGetCpuFrequency, NULL) != MH_OK) {
 				return FALSE;
 			}
 
-			if (MH_EnableHook(MH_ALL_HOOKS) != MH_OK)
-			{
+			if(MH_EnableHook(MH_ALL_HOOKS) != MH_OK) {
 				return FALSE;
 			}
 
 			break;
 		}
-		case DLL_PROCESS_DETACH:
-		{
+		case DLL_PROCESS_DETACH: {
 			MH_DisableHook(MH_ALL_HOOKS);
 			MH_Uninitialize();
 			break;

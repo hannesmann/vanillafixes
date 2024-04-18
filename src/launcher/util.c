@@ -5,15 +5,12 @@
 
 #include "cmdline.c"
 
-
 // Function to concatenate the module directory with the relative file path.
-LPWSTR UtilGetPath(LPCWSTR pModuleDirectory, LPCWSTR pRelativeFile)
-{
+LPWSTR UtilGetPath(LPCWSTR pModuleDirectory, LPCWSTR pRelativeFile) {
 	int characters = wcslen(pModuleDirectory) + wcslen(pRelativeFile) + 3; // Add 3 to account for the '\\' and the null terminator
 	LPWSTR pBuffer = HeapAlloc(GetProcessHeap(), 0, characters * sizeof(WCHAR));
 
-	if (pBuffer == NULL) // Check if memory allocation was successful
-	{
+	if(pBuffer == NULL) {
 		return NULL;
 	}
 
@@ -23,8 +20,7 @@ LPWSTR UtilGetPath(LPCWSTR pModuleDirectory, LPCWSTR pRelativeFile)
 }
 
 // Function to get the command line for WoW executable
-LPWSTR UtilGetWowCmdLine(LPCWSTR pDefaultWowExePath)
-{
+LPWSTR UtilGetWowCmdLine(LPCWSTR pDefaultWowExePath) {
 	VF_CMDLINE_PARSE_DATA data = { 0 };
 	data.pWowExePath = pDefaultWowExePath;
 
@@ -33,8 +29,7 @@ LPWSTR UtilGetWowCmdLine(LPCWSTR pDefaultWowExePath)
 }
 
 // Function to set default config value. Not used currently, but could be useful for overriding default settings
-int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue)
-{
+int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue) {
 	LPWSTR pWowConfigDirectory = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
 	swprintf(pWowConfigDirectory, MAX_PATH, L"%ls\\WTF", pWowDirectory);
 
@@ -53,24 +48,20 @@ int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue)
 
 	ZeroMemory(pBuffer, 1024);
 
-	while (TRUE)
-	{
+	while(TRUE) {
 		DWORD numberOfBytesRead = 0;
 		BOOL readResult = ReadFile(hWowConfigFile, pBuffer + bufferSize - 1024, 1024, &numberOfBytesRead, NULL);
-		if (!readResult)
-		{
+		if(!readResult) {
 			HeapFree(GetProcessHeap(), 0, pBuffer); // Avoid memory leak
 			return -1;
 		}
 
-		if (numberOfBytesRead > 0)
-		{
+		if(numberOfBytesRead > 0) {
 			bufferSize += 1024;
 
 			LPSTR pNewBuffer = HeapReAlloc(GetProcessHeap(), 0, pBuffer, bufferSize);
 
-			if (pNewBuffer == NULL)
-			{
+			if(pNewBuffer == NULL) {
 				HeapFree(GetProcessHeap(), 0, pBuffer); // Avoid memory leak
 				return -1;
 			}
@@ -78,15 +69,13 @@ int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue)
 			pBuffer = pNewBuffer;
 			ZeroMemory(pBuffer + bufferSize - 1024, 1024);
 		}
-		else
-		{
+		else {
 			break;
 		}
 	}
 
 	LPSTR pSearch = HeapAlloc(GetProcessHeap(), 0, strlen("SET ") + strlen(pKey) + 1);
-	if (pSearch == NULL)
-	{
+	if (pSearch == NULL) {
 		// Handle the error, probably by terminating the function
 		HeapFree(GetProcessHeap(), 0, pBuffer); // Avoid memory leak
 		return -1;
@@ -94,13 +83,11 @@ int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue)
 
 	sprintf(pSearch, "SET %s", pKey);
 
-	if (!StrStrIA(pBuffer, pSearch))
-	{
+	if(!StrStrIA(pBuffer, pSearch)) {
 		DWORD writeBufferLen = strlen("\r\n \"\"\r\n") + strlen(pSearch) + strlen(pValue) + 1;
 		LPSTR pWriteBuffer = HeapAlloc(GetProcessHeap(), 0, writeBufferLen);
 
-		if (pWriteBuffer == NULL)
-		{
+		if(pWriteBuffer == NULL) {
 			HeapFree(GetProcessHeap(), 0, pBuffer); // Avoid memory leak
 			HeapFree(GetProcessHeap(), 0, pSearch); // Avoid memory leak
 			return -1;
@@ -122,13 +109,11 @@ int UtilSetDefaultConfigValue(LPCWSTR pWowDirectory, LPCSTR pKey, LPCSTR pValue)
 }
 
 // Function to get the last error message
-LPWSTR UtilGetLastError()
-{
+LPWSTR UtilGetLastError() {
 	LPWSTR pErrorStr = NULL;
 	DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM;
 
-	if (FormatMessage(flags, NULL, GetLastError(), 0, (LPWSTR)&pErrorStr, 0, NULL))
-	{
+	if(FormatMessage(flags, NULL, GetLastError(), 0, (LPWSTR)&pErrorStr, 0, NULL)) {
 		return pErrorStr; // Caller is responsible for freeing this memory
 	}
 
