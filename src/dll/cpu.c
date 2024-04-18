@@ -12,6 +12,7 @@ inline void CpuTimeSample(PLARGE_INTEGER pQpc, PDWORD64 pTsc) {
 }
 
 DWORD64 CpuCalibrateTsc() {
+	int oldPriority = GetThreadPriority(GetCurrentThread());
 	/* Pin on current core and run with high priority */
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 	SetThreadAffinityMask(GetCurrentThread(), 1 << (GetCurrentProcessorNumber()));
@@ -35,7 +36,7 @@ DWORD64 CpuCalibrateTsc() {
 	double elapsedTime = diffQpc.QuadPart / (double)performanceFrequency.QuadPart;
 	double estimatedTscFrequency = diffTsc / elapsedTime;
 
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+	SetThreadPriority(GetCurrentThread(), oldPriority);
 	SetThreadAffinityMask(GetCurrentThread(), 0);
 
 	return estimatedTscFrequency;
