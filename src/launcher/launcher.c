@@ -75,9 +75,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	for(int i = 0; i < data.nWowArgs; i++) {
 		free(data.pWowArgs[i]);
 	}
-	if(data.pWowExePath != pWowExePath) {
-		free(data.pWowExePath);
-	}
 	free(pWowExePath);
 
 	int injectError = RemoteLoadLibrary(pPatcherPath, processInfo.hProcess);
