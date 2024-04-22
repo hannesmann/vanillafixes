@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "cmdline.h"
+#include "selftest.h"
 
 static void AppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput) {
 	int argsBufSize = (pOutput->nWowArgs + 1) * sizeof(LPWSTR);
@@ -17,18 +18,26 @@ static void AppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput) {
 	pOutput->pWowArgs[pOutput->nWowArgs - 1] = pEscapedArg;
 }
 
+static BOOL IsSelfTestArg(LPWSTR pArg) {
+	return StrStrI(pArg, VF_SELFTEST_ARG) == pArg;
+}
+
 static BOOL IsWowExe(LPWSTR pArg) {
-	return !!StrStrIW(pArg, L".exe");
+	return !!StrStrI(pArg, L".exe");
 }
 
 static BOOL IsLauncherExe(LPWSTR pArg) {
-	return !!StrStrIW(pArg, L"VanillaFixes.exe");
+	return !!StrStrI(pArg, L"VanillaFixes.exe");
 }
 
 void CmdLineParse(int argc, WCHAR **argv, PVF_CMDLINE_PARSE_DATA pOutput) {
 	for(int i = 1; i < argc; ++i) {
+		// Is this executable responsible for running the DXVK self-test?
+		if(IsSelfTestArg(argv[i])) {
+			pOutput->isSelfTestExecutable = TRUE;
+		}
 		// Is this argument an executable file?
-		if(IsWowExe(argv[i])) {
+		else if(IsWowExe(argv[i])) {
 			// Is this argument the VanillaFixes launcher?
 			if(!IsLauncherExe(argv[i])) {
 				// If not, use it as a potential game executable

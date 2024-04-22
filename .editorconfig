@@ -10,5 +10,5 @@ tab_width = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.{ini,conf,txt}]
+[{*.{ini,conf},dlls.txt}]
 end_of_line = crlf

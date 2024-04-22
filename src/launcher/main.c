@@ -4,11 +4,13 @@
 
 #include "macros.h"
 
-#include "cmdline.h"
 #include "loader.h"
 #include "os.h"
 
-int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR pCmdLine, _In_ int nCmdShow) {
+#include "cmdline.h"
+#include "selftest.h"
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
 	// Dialog boxes should be scaled to system DPI
 	EnableDPIAwareness();
 
@@ -31,6 +33,16 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	LPWSTR pWowExePath = malloc(MAX_PATH * sizeof(WCHAR));
 	PathCombine(pWowExePath, pWowDirectory, L"WoW.exe");
+
+	VF_CMDLINE_PARSE_DATA cmdLineData = {0};
+	cmdLineData.pWowExePath = pWowExePath;
+	CmdLineParse(__argc, __wargv, &cmdLineData);
+
+	// Check to see if self-test should run
+	if(cmdLineData.isSelfTestExecutable) {
+		return SelfTestMain(hInstance, hPrevInstance, pCmdLine, nCmdShow);
+	}
+
 	LPWSTR pPatcherPath = malloc(MAX_PATH * sizeof(WCHAR));
 	PathCombine(pPatcherPath, pWowDirectory, L"VfPatcher.dll");
 	LPWSTR pConfigPath = malloc(MAX_PATH * sizeof(WCHAR));
@@ -75,14 +87,12 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
 
 	// Prepare command line arguments for WoW
-	VF_CMDLINE_PARSE_DATA cmdLineData = {0};
-	cmdLineData.pWowExePath = pWowExePath;
-	CmdLineParse(__argc, __wargv, &cmdLineData);
 	LPWSTR pWowCmdLine = CmdLineFormat(&cmdLineData);
 
 	// Create the game process in a suspended state to ensure VanillaFixes can hook functions early
 	DWORD flags = CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT;
-	BOOL processCreated = CreateProcess(NULL, pWowCmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &startupInfo, &processInfo);
+	BOOL processCreated =
+		CreateProcess(NULL, pWowCmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &startupInfo, &processInfo);
 	AssertMessageBoxF(processCreated,
 		L"Error creating process: %ls\r\n"
 		L"This issue can occur if you have enabled compatibility mode on the WoW executable.",
@@ -114,6 +124,23 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	// Persist DLL list changes to silence the reminder
 	LoaderUpdateCacheState(pConfigPath, &dllListData);
+
+	// Run a DXVK self-test to inform the user of errors due to missing Vulkan support or missing drivers
+	VF_SELFTEST_RESULT selfTestResult = RunSelfTest(pWowDirectory);
+	LPCWSTR pFailReason = TestResultToStr(selfTestResult);
+
+	// Ignore the result if the process creation failed or system D3D9 is in use
+	BOOL ignoreResult = selfTestResult == VF_SELFTEST_SUCCESS ||
+		selfTestResult == VF_SELFTEST_FAIL_REASON_CREATEPROCESS ||
+		selfTestResult == VF_SELFTEST_FAIL_REASON_STILL_ACTIVE ||
+		selfTestResult == VF_SELFTEST_FAIL_REASON_SYSTEM_D3D9;
+	AssertMessageBoxF(ignoreResult,
+		L"DXVK self-test failed (%ls). The game will now crash.\r\n\r\n"
+		L"This is likely caused by missing Vulkan 1.3 support. "
+		L"The DXVK log file \"VanillaFixes_d3d9.log\" may have more information.\r\n\r\n"
+		L"If you have an older GPU (R9 200/300, GTX 700), remove \"d3d9.dll\" to use VanillaFixes without DXVK. "
+		L"Otherwise, try updating your drivers to the latest version.",
+		pFailReason);
 
 	// End the process normally
 	return 0;

@@ -9,6 +9,8 @@ typedef struct {
 	int nWowArgs;
 	// The game executable path
 	LPWSTR pWowExePath;
+	// If -selftest has been passed to VanillaFixes
+	BOOL isSelfTestExecutable;
 } VF_CMDLINE_PARSE_DATA, *PVF_CMDLINE_PARSE_DATA;
 
 // Parse the process command line into a list
