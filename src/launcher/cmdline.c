@@ -1,71 +1,49 @@
+#include <windows.h>
 #include <shlwapi.h>
 #include <stdlib.h>
 
-typedef struct {
-	// Arguments that should be passed to WoW
-	LPWSTR *pWowArgs;
-	// Number of arguments in pWowArgs
-	int nWowArgs;
-	// The game executable path
-	LPWSTR pWowExePath;
-} VF_CMDLINE_PARSE_DATA, *PVF_CMDLINE_PARSE_DATA;
+#include "cmdline.h"
 
-void CmdLineAppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput) {
+static void AppendArg(LPWSTR pArg, PVF_CMDLINE_PARSE_DATA pOutput) {
 	int argsBufSize = (pOutput->nWowArgs + 1) * sizeof(LPWSTR);
-
-	LPWSTR *temp = pOutput->pWowArgs;
-	temp = realloc(temp, argsBufSize);
-	if(!temp) {
-		return;
-	}
-
-	pOutput->pWowArgs = temp;
+	pOutput->pWowArgs = realloc(pOutput->pWowArgs, argsBufSize);
 	pOutput->nWowArgs++;
 
- 	// +2 for potential quotes
-	LPWSTR pEscapedArg = malloc((wcslen(pArg) + 3 + 2) * sizeof(WCHAR));
-	if(!pEscapedArg) {
-		return;
-	}
-
+	// The size of this buffer must be set to MAX_PATH
+	LPWSTR pEscapedArg = malloc(MAX_PATH * sizeof(WCHAR));
 	wcscpy(pEscapedArg, pArg);
 	PathQuoteSpaces(pEscapedArg);
 
 	pOutput->pWowArgs[pOutput->nWowArgs - 1] = pEscapedArg;
 }
 
-BOOL CmdLineContainsWowExe(LPWSTR pArg) {
+static BOOL IsWowExe(LPWSTR pArg) {
 	return !!StrStrIW(pArg, L".exe");
 }
 
-BOOL CmdLineContainsVfExe(LPWSTR pArg) {
+static BOOL IsLauncherExe(LPWSTR pArg) {
 	return !!StrStrIW(pArg, L"VanillaFixes.exe");
 }
 
-// Parse the process command line into a list
 void CmdLineParse(int argc, WCHAR **argv, PVF_CMDLINE_PARSE_DATA pOutput) {
 	for(int i = 1; i < argc; ++i) {
 		// Is this argument an executable file?
-		if(CmdLineContainsWowExe(argv[i])) {
+		if(IsWowExe(argv[i])) {
 			// Is this argument the VanillaFixes launcher?
-			if(!CmdLineContainsVfExe(argv[i])) {
+			if(!IsLauncherExe(argv[i])) {
 				// If not, use it as a potential game executable
 				pOutput->pWowExePath = argv[i];
 			}
 		}
 		else {
 			// If the argument is not an executable, pass it on to WoW
-			CmdLineAppendArg(argv[i], pOutput);
+			AppendArg(argv[i], pOutput);
 		}
 	}
 }
 
-// Format the game command line
 LPWSTR CmdLineFormat(PVF_CMDLINE_PARSE_DATA pInput) {
 	LPWSTR pCmdLine = calloc(MAX_PATH, sizeof(WCHAR));
-	if(!pCmdLine) {
-		return NULL;
-	}
 
 	// First, copy the name of the game executable into the command line
 	wcscpy(pCmdLine, pInput->pWowExePath);
@@ -78,11 +56,7 @@ LPWSTR CmdLineFormat(PVF_CMDLINE_PARSE_DATA pInput) {
 	}
 
 	if(requiredChars > MAX_PATH) {
-		LPWSTR temp = realloc(pCmdLine, requiredChars * sizeof(WCHAR));
-		if(!temp) {
-			return NULL;
-		}
-		pCmdLine = temp;
+		pCmdLine = realloc(pCmdLine, requiredChars * sizeof(WCHAR));
 	}
 
 	// Copy the arguments into the command line

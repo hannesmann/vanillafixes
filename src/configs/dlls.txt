@@ -1,0 +1,2 @@
+# Known mods for World of Warcraft 1.12
+nampower.dll

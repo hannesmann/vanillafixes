@@ -6,9 +6,9 @@
 // OsTimeManager::TimeKeeper
 static LPTHREAD_START_ROUTINE fnWowTimeKeeperThreadProc = (LPTHREAD_START_ROUTINE)0x0042b9c0;
 
-typedef DWORD64 (*PWOW_HW_GET_CPU_FREQUENCY)();
+typedef DWORD64 (*PWOW_GET_CPU_FREQUENCY)();
 // This function is used for detecting hardware changes and will hang if TimeKeeper is killed
-static PWOW_HW_GET_CPU_FREQUENCY fnWowHwGetCpuFrequency = (PWOW_HW_GET_CPU_FREQUENCY)0x0042c060;
+static PWOW_GET_CPU_FREQUENCY fnWowGetCPUFrequency = (PWOW_GET_CPU_FREQUENCY)0x0042c060;
 
 typedef DWORD64 (*PWOW_READ_TSC)();
 static PWOW_READ_TSC fnWowReadTSC = (PWOW_READ_TSC)0x004293d0;
