@@ -72,9 +72,8 @@ int WINAPI SelfTestMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmd
 	PathRemoveFileSpec(pWowDirectory);
 
 	VF_SELFTEST_RESULT result = TestDXVK(pWowDirectory);
-	DebugOutputF(L"Self test result: %ls", TestResultToStr(result));
-
-	return (int)result;
+	DebugOutputF(L"Self-test result: %ls", TestResultToStr(result));
+	return result;
 }
 
 typedef LPDIRECT3D9 (WINAPI *PDIRECT3D_CREATE_9)(UINT);
@@ -114,14 +113,14 @@ LPCWSTR TestResultToStr(VF_SELFTEST_RESULT result) {
 	switch(result) {
 		case VF_SELFTEST_SUCCESS: return L"Success";
 
-		case VF_SELFTEST_FAIL_REASON_CREATEPROCESS: L"Could not create process";
-		case VF_SELFTEST_FAIL_REASON_STILL_ACTIVE: L"Process still active";
+		case VF_SELFTEST_FAIL_REASON_CREATEPROCESS: return L"Could not create process";
+		case VF_SELFTEST_FAIL_REASON_STILL_ACTIVE: return L"Process still active";
 
-		case VF_SELFTEST_FAIL_REASON_SYSTEM_D3D9: L"System D3D9 is in use";
-		case VF_SELFTEST_FAIL_REASON_D3D9_NOT_LOADED: L"d3d9.dll could not be loaded";
-		case VF_SELFTEST_FAIL_REASON_D3DCREATE9_NOT_FOUND: L"Direct3DCreate9 was not found in d3d9.dll";
-		case VF_SELFTEST_FAIL_REASON_D3DCREATE9_FAILED: L"Direct3DCreate9 failed";
-		case VF_SELFTEST_FAIL_REASON_NO_ADAPTERS: L"No adapters";
+		case VF_SELFTEST_FAIL_REASON_SYSTEM_D3D9: return L"System D3D9 is in use";
+		case VF_SELFTEST_FAIL_REASON_D3D9_NOT_LOADED: return L"d3d9.dll could not be loaded";
+		case VF_SELFTEST_FAIL_REASON_D3DCREATE9_NOT_FOUND: return L"Direct3DCreate9 was not found in d3d9.dll";
+		case VF_SELFTEST_FAIL_REASON_D3DCREATE9_FAILED: return L"Direct3DCreate9 failed";
+		case VF_SELFTEST_FAIL_REASON_NO_ADAPTERS: return L"No adapters";
 	}
 
 	// If we have an unknown result, the process was terminated by an external exception
