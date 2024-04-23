@@ -58,12 +58,13 @@ void LoaderParseConfig(LPCWSTR pModulePath, LPCWSTR pConfigPath, PVF_DLL_LIST_PA
 				LPWSTR pNormalizedPath = NormalizePath(pModulePath, pLines[i]);
 				free(pLines[i]);
 
-				// If the file exists, consider it as a valid candidate and save it in the cache
-				if(GetFileAttributes(pNormalizedPath) != INVALID_FILE_ATTRIBUTES) {
-					AppendArg(pNormalizedPath, pOutput);
+				DWORD attribs = GetFileAttributes(pNormalizedPath);
+				// The path is only considered a valid candidate if it exists and is not a directory
+				if(attribs == INVALID_FILE_ATTRIBUTES || attribs & FILE_ATTRIBUTE_DIRECTORY) {
+					free(pNormalizedPath);
 				}
 				else {
-					free(pNormalizedPath);
+					AppendArg(pNormalizedPath, pOutput);
 				}
 			}
 
