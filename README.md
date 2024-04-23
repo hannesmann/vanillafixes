@@ -2,36 +2,36 @@
 
 A client modification for World of Warcraft 1.12.1 to eliminate stutter and animation lag.
 
-**Download here:** [Releases](https://github.com/hannesmann/vanillafixes/releases)
+**Download and installation instructions here:** [Releases](https://github.com/hannesmann/vanillafixes/releases)
 
 ![Comparison](docs/comparison.png)
 
-## Installation
-
-1. Extract the zip file and copy all files to the same folder as WoW.exe.
-
-2. Update your WoW shortcut to point to VanillaFixes.exe instead of WoW.exe.
-
 ## Compatibility with other mods
 
-* **Nampower:** VanillaFixes.exe will load [Nampower](https://github.com/namreeb/nampower) if the DLL is present in the game directory.
+#### Other client mods (nampower, etc)
 
-* **FoV changers, large address patchers, etc**: These usually modify WoW.exe and will still work.
+The VanillaFixes launcher has basic support for loading additional DLLs. Add the file to `dlls.txt` and it will be loaded if it can be found in the game directory or at an absolute path. VanillaFixes will show a [reminder](docs/messagebox-dlls.png) when the list of active DLLs has changed.
 
-* **DLL injectors and launchers:** These will only work if they load VfPatcher.dll before the game starts. Injecting at the login screen won't work.
+#### EXE patches (FoV changers, large address patchers, etc)
 
-## Using a custom executable
+The VanillaFixes launcher can run the game from a non-standard executable (such as `WoW_tweaked.exe` or `WoWFoV.exe`). There are two ways to accomplish this:
 
-If you run WoW from a non-standard executable (for example: WoW_Tweaked.exe or WoWFoV.exe) you can add the executable name to the end of the command line (like this:
-`"path\to\VanillaFixes.exe" CustomExecutableName.exe`) or you can drag and drop the executable over VanillaFixes.exe.
+* Drag and drop the executable over the VanillaFixes launcher.
+* Create a shortcut to VanillaFixes and add the name of the executable to the end of the "Target" field in "Properties". [Image](docs/shortcut.png)
 
-## Will I get banned for using this?
+#### DLL injectors and launchers
 
-As always, you should use tools like these **at your own risk**, but I haven't found any evidence that VanillaFixes could trigger the Warden anticheat.
+These will only work if they load `VfPatcher.dll` before the game process starts (i.e. if the game launches in a suspended state). Injecting at the login screen won't work.
+
+The included launcher is intended to be easy to use and transparent to the user. It should "just work" for the most common cases. For a configurable alternative that works with VanillaFixes and supports multiple game versions, try [wowreeb](https://github.com/namreeb/wowreeb).
+
+## Will I get banned for using VanillaFixes?
+
+As always, you should use tools like these **at your own risk**, but no evidence has been found that VanillaFixes could conflict with the game's anticheat.
 
 VanillaFixes does not modify the game executable, permanently modify any game code, hook any Windows API functions or keep running in the background during gameplay. As soon as you see the login screen it has already been unloaded.
 
-During startup VanillaFixes will modify timing variables in memory to force the game to use a high precision timer. Warden has a check to verify that time functions in the game are behaving as expected (to detect speedhacks, etc) and it's possible that these changes could cause it to fail, but in my testing I found no evidence for that being the case ([test on VMaNGOS](docs/vmangos-timing-check.png)).
+During startup VanillaFixes will modify timing variables in memory to force the game to use a high precision timer. Warden has a check to verify that time functions in the game are behaving as expected (to detect speedhacks, etc). VanillaFixes does not interfere with this check ([test on VMaNGOS](docs/vmangos-timing-check.png)).
 
 ## Compiling
 
