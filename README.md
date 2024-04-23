@@ -35,9 +35,10 @@ During startup VanillaFixes will modify timing variables in memory to force the 
 
 ## Compiling
 
-Building VanillaFixes requires a recent version of the Windows SDK (10.0.22000.0+) and [CMake](https://cmake.org). If you're on Linux, use [msvc-wine](https://github.com/mstorsjo/msvc-wine). Ninja (https://ninja-build.org) or Visual Studio can be used to build the project.
+VanillaFixes can be built with MSVC or MinGW. A recent version of the Windows SDK (10.0.22000.0+) and [CMake](https://cmake.org) is required. Ninja (https://ninja-build.org) or Visual Studio can be used to build the project.
 
 To build with Ninja, open the x86 VS Native Tools command prompt and run the following commands in the project directory:
+
 ```
 git submodule update --init
 

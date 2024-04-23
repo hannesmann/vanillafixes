@@ -18,15 +18,6 @@ endif()
 
 project(vanillafixes LANGUAGES C)
 
-# Check for Microsoft Visual C++
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-	message(
-		FATAL_ERROR
-		"Microsoft Visual C++ is required to compile VanillaFixes.\n"
-		"If you're running Linux, use Wine with https://github.com/mstorsjo/msvc-wine."
-	)
-endif()
-
 # Check for 32-bit environment
 if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
 	message(

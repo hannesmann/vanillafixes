@@ -66,22 +66,22 @@ void InitAdditionalDLLs() {
 			HMODULE moduleHandle = GetModuleHandle(dllListData.pAdditionalDLLs[i]);
 
 			if(moduleHandle) {
-				DebugOutputF(L"Handle was found for %s", dllListData.pAdditionalDLLs[i]);
+				DebugOutputF(L"Handle was found for %ls", dllListData.pAdditionalDLLs[i]);
 				PLOAD pLoad = (PLOAD)GetProcAddress(moduleHandle, "Load");
 				// Does this DLL export a load function?
 				if(pLoad) {
 					DWORD result = pLoad();
-					DebugOutputF(L"Load function was found for %s, result=%d", dllListData.pAdditionalDLLs[i], result);
+					DebugOutputF(L"Load function was found for %ls, result=%d", dllListData.pAdditionalDLLs[i], result);
 
 					// Did the load function return an error?
 					if(result) {
-						MessageBoxF(L"DLL %s was not loaded properly (load function failed)",
+						MessageBoxF(L"DLL %ls was not loaded properly (load function failed)",
 							dllListData.pAdditionalDLLs[i]);
 					}
 				}
 			}
 			else {
-				MessageBoxF(L"DLL %s was not loaded properly (no module handle)",
+				MessageBoxF(L"DLL %ls was not loaded properly (no module handle)",
 					dllListData.pAdditionalDLLs[i]);
 			}
 

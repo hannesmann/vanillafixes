@@ -2,6 +2,10 @@
 #include <shlwapi.h>
 #include <stdlib.h>
 
+#ifndef _MSC_VER
+#include <cpuid.h>
+#endif
+
 #include "macros.h"
 
 #include "loader.h"
@@ -15,8 +19,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	EnableDPIAwareness();
 
 	// Gather CPU info
-	int cpuInfo[4] = {0};
+	unsigned int cpuInfo[4] = {0};
+#ifdef _MSC_VER
 	__cpuid(cpuInfo, 0x80000007);
+#else
+	__get_cpuid(0x80000007, &cpuInfo[0], &cpuInfo[1], &cpuInfo[2], &cpuInfo[3]);
+#endif
 
 	// Check if the CPU supports the "Invariant TSC" feature
 	AssertMessageBoxF(cpuInfo[3] & (1 << 8),

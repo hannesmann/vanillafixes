@@ -6,7 +6,7 @@
 #include "tsc.h"
 #include "offsets_1_12_1.h"
 
-inline void TimeSample(PLARGE_INTEGER pQpc, PDWORD64 pTsc) {
+static inline void TimeSample(PLARGE_INTEGER pQpc, PDWORD64 pTsc) {
 	// Try to request a new timeslice before sampling timestamp counters
 	Sleep(0);
 
