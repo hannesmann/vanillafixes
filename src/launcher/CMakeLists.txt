@@ -16,7 +16,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 	set_target_properties(vanillafixes_launcher PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded")
 	target_link_options(vanillafixes_launcher PRIVATE "/MANIFEST:NO")
 else()
-	target_compile_options(vanillafixes_launcher PRIVATE "-Wall" "-Wno-unused-variable" "-msse2" "-municode")
+	target_compile_options(vanillafixes_launcher PRIVATE "-Wall" "-Wno-unused-variable" "-municode" "-fno-strict-aliasing")
 	target_link_options(vanillafixes_launcher PRIVATE "-static-libgcc" "-municode")
 
 	if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

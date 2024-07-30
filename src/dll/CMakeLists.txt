@@ -13,7 +13,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 	set_target_properties(vanillafixes_dll PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded")
 	target_link_options(vanillafixes_dll PRIVATE "/MANIFEST:NO")
 else()
-	target_compile_options(vanillafixes_dll PRIVATE "-Wall" "-Wno-unused-variable" "-msse2" "-municode")
+	# msse2 needed for _mm_lfence
+	target_compile_options(vanillafixes_dll PRIVATE "-Wall" "-Wno-unused-variable" "-msse2" "-municode" "-fno-strict-aliasing")
 	target_link_options(vanillafixes_dll PRIVATE "-static-libgcc" "-municode")
 
 	if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

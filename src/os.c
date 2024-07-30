@@ -25,21 +25,21 @@ void EnableDPIAwareness() {
 		LoadLibrary(L"user32");
 		HMODULE hUser32 = GetModuleHandle(L"user32");
 		fnSetProcessDPIAwarenessContext = (PSET_PROCESS_DPI_AWARENESS_CONTEXT)GetProcAddress(hUser32, "SetProcessDpiAwarenessContext");
+	}
 
-		// If getting the function address failed, fall back to the old API
-		if(fnSetProcessDPIAwarenessContext) {
-			DebugOutputF(L"Using SetProcessDpiAwarenessContext to set DPI scaling mode");
-			if(!fnSetProcessDPIAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
-				DebugOutputF(L"DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 not supported");
-				// If DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 is not supported, fall back to the old API
-				SetProcessDPIAware();
-				DebugOutputF(L"Using SetProcessDPIAware to set DPI scaling mode");
-			}
-		}
-		else {
+	if(fnSetProcessDPIAwarenessContext) {
+		DebugOutputF(L"Using SetProcessDpiAwarenessContext to set DPI scaling mode");
+		if(!fnSetProcessDPIAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
+			DebugOutputF(L"DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 not supported");
+			// If DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 is not supported, fall back to the old API
 			SetProcessDPIAware();
 			DebugOutputF(L"Using SetProcessDPIAware to set DPI scaling mode");
 		}
+	}
+	// If getting the function address failed, fall back to the old API
+	else {
+		SetProcessDPIAware();
+		DebugOutputF(L"Using SetProcessDPIAware to set DPI scaling mode");
 	}
 }
 
