@@ -1,6 +1,5 @@
 add_library(vanillafixes_dll SHARED
 	"dll.c"
-	"tsc.c"
 
 	"${CMAKE_SOURCE_DIR}/src/loader.c"
 	"${CMAKE_SOURCE_DIR}/src/os.c"
