@@ -74,12 +74,12 @@ void* ScanMemory(void* baseAddress, size_t size, const uint8_t* signature, const
 
 		if (found) {
 			void* foundAddress = (void*)(memory + i);
-			printf("Found %s at address: 0x%08X\n", name, (uintptr_t)foundAddress);
+			DebugOutputF("Found %s at address: 0x%08X\n", name, (uintptr_t)foundAddress);
 			return foundAddress;
 		}
 	}
 
-	printf("Signature '%s' not found.\n", name);
+	DebugOutputF("Signature '%s' not found.\n", name);
 	return NULL;
 }
 
