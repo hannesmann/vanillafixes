@@ -196,10 +196,3 @@ int RemoteLoadLibrary(LPWSTR pDllPath, HANDLE hTargetProcess) {
 
 	return 0;
 }
-
-int RemoteSetFlags(VF_LAUNCHER_FLAGS newFlags, HANDLE hTargetProcess) {
-	BOOL success = WriteProcessMemory(hTargetProcess, g_pLauncherFlags, &newFlags, sizeof(VF_LAUNCHER_FLAGS), NULL);
-	// Assert that flags were successfully written to the target process
-	AssertMessageBoxF(success, L"Failed to write process memory (newFlags)");
-	return 0;
-}

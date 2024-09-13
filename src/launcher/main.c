@@ -109,8 +109,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	// Load the VanillaFixes DLL first (init is done in DLL_PROCESS_ATTACH)
 	int injectError = RemoteLoadLibrary(pPatcherPath, processInfo.hProcess);
 	if(dllListData.nAdditionalDLLs) {
-		// If there are additional DLLs specified in dlls.txt, they might need to be initialized by VfPatcher
-		injectError = injectError || RemoteSetFlags(VF_LAUNCHER_FLAG_INIT_DLLS, processInfo.hProcess);
 		// Load mods in the order specified in dlls.txt (init is done in DLL_PROCESS_ATTACH or by exporting a Load function)
 		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
 			injectError = injectError || RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);

@@ -105,12 +105,8 @@ DWORD64 VfGetCPUFrequency() {
 	// The game has built-in UI scaling which means Windows DPI scaling is unnecessary
 	// DXVK already enabled this by default (d3d9.dpiAware)
 	EnableDPIAwareness();
-
-	DebugOutputF(L"launcherFlags=%u", *g_pLauncherFlags);
-	if(*g_pLauncherFlags & VF_LAUNCHER_FLAG_INIT_DLLS) {
-		InitAdditionalDLLs();
-	}
-	*g_pLauncherFlags = 0;
+	// Check for and init additional DLLs loaded by the launcher
+	InitAdditionalDLLs();
 
 	// Wait until all threads have finished
 	while(!*g_addresses.pUseTSC) {
