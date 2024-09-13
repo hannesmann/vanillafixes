@@ -1,15 +1,20 @@
 #include <windows.h>
 #include <shlwapi.h>
 #include <stdlib.h>
+#include <timeapi.h>
+#include <intrin.h>
 
 #include <MinHook.h>
 
 #include "macros.h"
-#include "offsets_1_12_1.h"
 
 #include "loader.h"
+#include "memory.h"
 #include "os.h"
 #include "tsc.h"
+
+// Addresses found by SearchMemory procedure
+static VF_ADDRESSES g_addresses;
 
 // Handle to this module, for unloading on exit
 static HMODULE g_hSelf = NULL;
@@ -27,14 +32,14 @@ DWORD WINAPI VfTimeKeeperThreadProc(LPVOID lpParameter) {
 	SetPowerThrottlingState(PROCESS_POWER_THROTTLING_EXECUTION_SPEED, FALSE);
 
 	// Calibrate the game timer using QueryPerformanceFrequency
-	*g_pWowTimerTicksPerSecond = CalibrateTSC();
-	DebugOutputF(L"timerTicksPerSecond=%lld", *g_pWowTimerTicksPerSecond);
-	*g_pWowTimerToMilliseconds = 1000.0 / *g_pWowTimerTicksPerSecond;
-	*g_pWowUseTSC = TRUE;
+	*g_addresses.pTimerTicksPerSecond = CalibrateTSC();
+	DebugOutputF(L"timerTicksPerSecond=%lld", *g_addresses.pTimerTicksPerSecond);
+	*g_addresses.pTimerToMilliseconds = 1000.0 / *g_addresses.pTimerTicksPerSecond;
+	*g_addresses.pUseTSC = TRUE;
 
 	// Align TSC with GTC
-	*g_pWowTimerOffset = GetTickCount() - (fnWowReadTSC() * *g_pWowTimerToMilliseconds);
-	DebugOutputF(L"timerOffset=%.0lf", *g_pWowTimerOffset);
+	*g_addresses.pTimerOffset = GetTickCount() - (__rdtsc() * *g_addresses.pTimerToMilliseconds);
+	DebugOutputF(L"timerOffset=%.0lf", *g_addresses.pTimerOffset);
 
 	while(!g_mainThreadFinished) {
 		Sleep(1);
@@ -108,14 +113,14 @@ DWORD64 VfGetCPUFrequency() {
 	*g_pLauncherFlags = 0;
 
 	// Wait until all threads have finished
-	while(!*g_pWowUseTSC) {
+	while(!*g_addresses.pUseTSC) {
 		Sleep(1);
 	}
 
 	g_mainThreadFinished = TRUE;
 
-	// 1.12 assumes TSC frequency == CPU frequency
-	return *g_pWowTimerTicksPerSecond;
+	// The game assumes the TSC frequency is equal to the CPU frequency
+	return *g_addresses.pTimerTicksPerSecond;
 }
 
 // Initialization function for VanillaFixes
@@ -124,16 +129,31 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 
 	switch(fdwReason) {
 		case DLL_PROCESS_ATTACH: {
+			// Search for addresses before the game has a chance to write to memory
+			DWORD startTime = timeGetTime();
+			if(!ScanMemory(&g_addresses)) {
+				return FALSE;
+			}
+
+			DWORD scanTime = timeGetTime() - startTime;
+			DebugOutputF(L"Searching for addresses took %d ms", scanTime);
+			DebugOutputF(L"pTimeKeeperThreadProc=0x%p", g_addresses.pTimeKeeperThreadProc);
+			DebugOutputF(L"pGetCPUFrequency=0x%p", g_addresses.pGetCPUFrequency);
+			DebugOutputF(L"pUseTSC=0x%p", g_addresses.pUseTSC);
+			DebugOutputF(L"pTimerTicksPerSecond=0x%p", g_addresses.pTimerTicksPerSecond);
+			DebugOutputF(L"pTimerToMilliseconds=0x%p", g_addresses.pTimerToMilliseconds);
+			DebugOutputF(L"pTimerOffset=0x%p", g_addresses.pTimerOffset);
+
 			if(MH_Initialize() != MH_OK) {
 				return FALSE;
 			}
 
 			// Hook OsTimeManager::TimeKeeper before the thread is created
-			if(MH_CreateHook(fnWowTimeKeeperThreadProc, &VfTimeKeeperThreadProc, NULL) != MH_OK) {
+			if(MH_CreateHook(g_addresses.pTimeKeeperThreadProc, &VfTimeKeeperThreadProc, NULL) != MH_OK) {
 				return FALSE;
 			}
 			// Hook function on the main thread to perform extra tasks
-			if(MH_CreateHook(fnWowGetCPUFrequency, &VfGetCPUFrequency, NULL) != MH_OK) {
+			if(MH_CreateHook(g_addresses.pGetCPUFrequency, &VfGetCPUFrequency, NULL) != MH_OK) {
 				return FALSE;
 			}
 

@@ -1,6 +1,6 @@
 # VanillaFixes
 
-A client modification for World of Warcraft 1.12.1 to eliminate stutter and animation lag.
+A client modification for World of Warcraft 1.6.1-1.12.1 to eliminate stutter and animation lag.
 
 **Download and installation instructions here:** [Releases](https://github.com/hannesmann/vanillafixes/releases)
 

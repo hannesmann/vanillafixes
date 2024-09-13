@@ -186,7 +186,7 @@ int RemoteLoadLibrary(LPWSTR pDllPath, HANDLE hTargetProcess) {
 	// Assert that the thread terminated successfully and the DLL was loaded
 	AssertMessageBoxF(threadResult && threadResult != STILL_ACTIVE,
 		L"DLL entry point returned an error (%ld).\r\n\r\n"
-		L"Make sure you have a compatible game client.",
+		L"Make sure you have a compatible game client (1.6.1-1.12.1).",
 		threadResult
 	);
 

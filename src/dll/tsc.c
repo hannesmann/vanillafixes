@@ -2,16 +2,16 @@
 #include <intrin.h>
 #include <math.h>
 #include <processthreadsapi.h>
+#include <intrin.h>
 
 #include "tsc.h"
-#include "offsets_1_12_1.h"
 
 static inline void TimeSample(PLARGE_INTEGER pQpc, PDWORD64 pTsc) {
 	// Try to request a new timeslice before sampling timestamp counters
 	Sleep(0);
 
 	QueryPerformanceCounter(pQpc);
-	*pTsc = fnWowReadTSC();
+	*pTsc = __rdtsc();
 
 	// Wait for QPC and RDTSC to finish
 	_mm_lfence();
