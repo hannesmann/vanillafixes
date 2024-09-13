@@ -1,5 +1,8 @@
-# Known mods for World of Warcraft 1.12
+# If you use nampower (https://github.com/namreeb/nampower), it will be loaded by this line
 nampower.dll
+# If you use SuperWoW (https://github.com/balakethelock/SuperWoW), it will be loaded by this line
 SuperWoWhook.dll
+# If you use VanillaMultiMonitorFix (https://github.com/Mates1500/VanillaMultiMonitorFix), it will be loaded by this line
+VanillaMultiMonitorFix.dll
 
 # Add your own DLLs below
