@@ -104,9 +104,22 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	int injectError = 0;
 	if(dllListData.nAdditionalDLLs) {
-		// Load mods in the order specified in dlls.txt (init is done in DLL_PROCESS_ATTACH or by exporting a Load function)
+		// Check if VanillaFixes.dll is in the list and load it first
+		int vanillaFixesIndex = -1;
 		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
-			injectError = injectError || RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);
+			LPWSTR fileName = PathFindFileName(dllListData.pAdditionalDLLs[i]);
+			if(_wcsicmp(fileName, L"VanillaFixes.dll") == 0) {
+				vanillaFixesIndex = i;
+				injectError = RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);
+				break;
+			}
+		}
+
+		// Load the rest of the DLLs
+		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
+			if(i != vanillaFixesIndex) {
+				injectError = injectError || RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);
+			}
 		}
 	}
 
