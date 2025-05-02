@@ -1,0 +1,78 @@
+name: Build VanillaFixes
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
+        compiler: [msvc]  # Removed MinGW
+        include:
+          - compiler: msvc
+            cmake_generator: "Visual Studio 17 2022"
+            cmake_args: "-A Win32"
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Configure CMake (MSVC)
+      run: |
+        cmake -B build -G "${{ matrix.cmake_generator }}" ${{ matrix.cmake_args }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_C_FLAGS="/DPROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION=0x00000004"
+
+    - name: Build
+      run: |
+        cmake --build build --config ${{ matrix.build_type }}
+
+    - name: Create artifact directory
+      run: |
+        mkdir -p artifacts/VanillaFixes-${{ matrix.compiler }}-${{ matrix.build_type }}
+        
+    - name: Copy artifacts
+      run: |
+        cp bin/${{ matrix.build_type }}/VanillaFixes.exe artifacts/VanillaFixes-${{ matrix.compiler }}-${{ matrix.build_type }}/
+        cp bin/${{ matrix.build_type }}/VfPatcher.dll artifacts/VanillaFixes-${{ matrix.compiler }}-${{ matrix.build_type }}/
+      shell: bash
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: VanillaFixes-${{ matrix.compiler }}-${{ matrix.build_type }}
+        path: artifacts/VanillaFixes-${{ matrix.compiler }}-${{ matrix.build_type }}
+
+  create-release:
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release package
+        run: |
+          mkdir -p release
+          cp -r artifacts/VanillaFixes-msvc-Release/* release/
+          cd release
+          zip -r ../VanillaFixes.zip .
+        shell: bash
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: VanillaFixes.zip
+          name: VanillaFixes ${{ github.sha }}
+          tag_name: build-${{ github.run_number }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
