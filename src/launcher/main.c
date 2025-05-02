@@ -51,16 +51,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		return SelfTestMain(hInstance, hPrevInstance, pCmdLine, nCmdShow);
 	}
 
-	LPWSTR pPatcherPath = malloc(MAX_PATH * sizeof(WCHAR));
-	PathCombine(pPatcherPath, pWowDirectory, L"VfPatcher.dll");
 	LPWSTR pConfigPath = malloc(MAX_PATH * sizeof(WCHAR));
 	PathCombine(pConfigPath, pWowDirectory, L"dlls.txt");
 
 	// Check if the necessary files exist
 	AssertMessageBoxF(GetFileAttributes(pWowExePath) != INVALID_FILE_ATTRIBUTES,
 		L"WoW.exe not found. Extract VanillaFixes into the same directory as the game.");
-	AssertMessageBoxF(GetFileAttributes(pPatcherPath) != INVALID_FILE_ATTRIBUTES,
-		L"VfPatcher.dll not found. Extract all files into the game directory.");
 
 	// Check to see if additional DLLs should be loaded
 	VF_DLL_LIST_PARSE_DATA dllListData = {0};
@@ -106,8 +102,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		L"This issue can occur if you have enabled compatibility mode on the WoW executable.",
 		GetLastErrorMessage());
 
-	// Load the VanillaFixes DLL first (init is done in DLL_PROCESS_ATTACH)
-	int injectError = RemoteLoadLibrary(pPatcherPath, processInfo.hProcess);
+	int injectError = 0;
 	if(dllListData.nAdditionalDLLs) {
 		// Load mods in the order specified in dlls.txt (init is done in DLL_PROCESS_ATTACH or by exporting a Load function)
 		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
