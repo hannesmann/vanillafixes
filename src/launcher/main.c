@@ -62,34 +62,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	VF_DLL_LIST_PARSE_DATA dllListData = {0};
 	LoaderParseConfig(pWowDirectory, pConfigPath, &dllListData);
 
-	// Проверяем, есть ли VanillaFixes.dll в списке
-	int vanillaFixesIndex = -1;
-	for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
-		LPWSTR fileName = PathFindFileName(dllListData.pAdditionalDLLs[i]);
-		if(_wcsicmp(fileName, L"VanillaFixes.dll") == 0) {
-			vanillaFixesIndex = i;
-			break;
-		}
-	}
-
-	// Memorize the current state of the modification flag
-	BOOL wasModified = dllListData.listModified;
-
-	// If VanillaFixes.dll is found and it is not the first in the list, move it to the first position
-	if(vanillaFixesIndex > 0) {
-		LPWSTR tempPath = dllListData.pAdditionalDLLs[vanillaFixesIndex];
-		// Shift all elements between 0 and vanillaFixesIndex by one position to the right
-		for(int i = vanillaFixesIndex; i > 0; i--) {
-			dllListData.pAdditionalDLLs[i] = dllListData.pAdditionalDLLs[i-1];
-		}
-		// Put VanillaFixes.dll in the first position
-		dllListData.pAdditionalDLLs[0] = tempPath;
-		
-		// Restore the original state of the modification flag
-		// This will prevent the request from showing only because VanillaFixes.dll has been moved
-		dllListData.listModified = wasModified;
-	}
-
 	// If there are additional DLLs, and the list has been modified since last launch, show a message box
 	if(dllListData.nAdditionalDLLs && dllListData.listModified) {
 		LPCWSTR pFormat =
@@ -108,6 +80,38 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		if(result != IDOK) {
 			return result;
 		}
+	}
+
+	// Persist DLL list changes to silence the reminder
+	// IMPORTANT: Update the cache BEFORE changing the order of DLLs in memory
+	LoaderUpdateCacheState(pConfigPath, &dllListData);
+
+	// Create a copy of the DLL list to change the loading order
+	// but do not affect the order that will be stored in the cache
+	LPWSTR* loadOrderDLLs = malloc(dllListData.nAdditionalDLLs * sizeof(LPWSTR));
+	for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
+		loadOrderDLLs[i] = dllListData.pAdditionalDLLs[i];
+	}
+
+	// Check if VanillaFixes.dll is in the list.
+	int vanillaFixesIndex = -1;
+	for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
+		LPWSTR fileName = PathFindFileName(loadOrderDLLs[i]);
+		if(_wcsicmp(fileName, L"VanillaFixes.dll") == 0) {
+			vanillaFixesIndex = i;
+			break;
+		}
+	}
+
+	// If VanillaFixes.dll is found and it is not the first in the list, move it to the first position
+	if(vanillaFixesIndex > 0) {
+		LPWSTR tempPath = loadOrderDLLs[vanillaFixesIndex];
+		// Shift all elements between 0 and vanillaFixesIndex one position to the right
+		for(int i = vanillaFixesIndex; i > 0; i--) {
+			loadOrderDLLs[i] = loadOrderDLLs[i-1];
+		}
+		// Put VanillaFixes.dll on the first position
+		loadOrderDLLs[0] = tempPath;
 	}
 
 	STARTUPINFO startupInfo = {0};
@@ -132,9 +136,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	int injectError = 0;
 	if(dllListData.nAdditionalDLLs) {
-		// Load all DLLs in order (now VanillaFixes.dll is the first in the list)
+		// Load all DLLs in the modified order (VanillaFixes.dll first)
 		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
-			injectError = injectError || RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);
+			injectError = injectError || RemoteLoadLibrary(loadOrderDLLs[i], processInfo.hProcess);
 		}
 	}
 
@@ -151,8 +155,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	CloseHandle(processInfo.hProcess);
 	CloseHandle(processInfo.hThread);
 
-	// Persist DLL list changes to silence the reminder
-	LoaderUpdateCacheState(pConfigPath, &dllListData);
+	// Free the memory allocated for the DLL list copy
+	free(loadOrderDLLs);
 
 	// Run a DXVK self-test to inform the user of errors due to missing Vulkan support or missing drivers
 	VF_SELFTEST_RESULT selfTestResult = RunSelfTest(pWowDirectory);
