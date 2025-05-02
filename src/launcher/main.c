@@ -117,13 +117,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		// If VanillaFixes.dll is found and it is not the first in the list, move it to the first position
 		if(vanillaFixesIndex > 0) {
 			LPWSTR tempPath = dllListData.pAdditionalDLLs[vanillaFixesIndex];
-			// Сдвигаем все элементы между 0 и vanillaFixesIndex на одну позицию вправо
+			// Move all elements between 0 and vanillaFixesIndex one position to the right
 			for(int i = vanillaFixesIndex; i > 0; i--) {
 				dllListData.pAdditionalDLLs[i] = dllListData.pAdditionalDLLs[i-1];
 			}
 			// Put VanillaFixes.dll in the first position
 			dllListData.pAdditionalDLLs[0] = tempPath;
-			vanillaFixesIndex = 0; // Обновляем индекс
+			vanillaFixesIndex = 0; // Updating the index
 		}
 
 		// Load all DLLs in order (now VanillaFixes.dll is the first in the list)
