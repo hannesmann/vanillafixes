@@ -1,3 +1,5 @@
+# If you use vanillafixes (https://github.com/hannesmann/vanillafixes), it will be loaded by this line
+VanillaFixes.dll
 # If you use nampower (https://github.com/namreeb/nampower), it will be loaded by this line
 nampower.dll
 # If you use SuperWoW (https://github.com/balakethelock/SuperWoW), it will be loaded by this line
