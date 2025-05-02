@@ -104,22 +104,31 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	int injectError = 0;
 	if(dllListData.nAdditionalDLLs) {
-		// Check if VanillaFixes.dll is in the list and load it first
+		// Check if VanillaFixes.dll is in the list
 		int vanillaFixesIndex = -1;
 		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
 			LPWSTR fileName = PathFindFileName(dllListData.pAdditionalDLLs[i]);
 			if(_wcsicmp(fileName, L"VanillaFixes.dll") == 0) {
 				vanillaFixesIndex = i;
-				injectError = RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);
 				break;
 			}
 		}
 
-		// Load the rest of the DLLs
-		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
-			if(i != vanillaFixesIndex) {
-				injectError = injectError || RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);
+		// If VanillaFixes.dll is found and it is not the first in the list, move it to the first position
+		if(vanillaFixesIndex > 0) {
+			LPWSTR tempPath = dllListData.pAdditionalDLLs[vanillaFixesIndex];
+			// Сдвигаем все элементы между 0 и vanillaFixesIndex на одну позицию вправо
+			for(int i = vanillaFixesIndex; i > 0; i--) {
+				dllListData.pAdditionalDLLs[i] = dllListData.pAdditionalDLLs[i-1];
 			}
+			// Put VanillaFixes.dll in the first position
+			dllListData.pAdditionalDLLs[0] = tempPath;
+			vanillaFixesIndex = 0; // Обновляем индекс
+		}
+
+		// Load all DLLs in order (now VanillaFixes.dll is the first in the list)
+		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
+			injectError = injectError || RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);
 		}
 	}
 
