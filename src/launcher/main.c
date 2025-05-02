@@ -62,6 +62,34 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	VF_DLL_LIST_PARSE_DATA dllListData = {0};
 	LoaderParseConfig(pWowDirectory, pConfigPath, &dllListData);
 
+	// Проверяем, есть ли VanillaFixes.dll в списке
+	int vanillaFixesIndex = -1;
+	for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
+		LPWSTR fileName = PathFindFileName(dllListData.pAdditionalDLLs[i]);
+		if(_wcsicmp(fileName, L"VanillaFixes.dll") == 0) {
+			vanillaFixesIndex = i;
+			break;
+		}
+	}
+
+	// Memorize the current state of the modification flag
+	BOOL wasModified = dllListData.listModified;
+
+	// If VanillaFixes.dll is found and it is not the first in the list, move it to the first position
+	if(vanillaFixesIndex > 0) {
+		LPWSTR tempPath = dllListData.pAdditionalDLLs[vanillaFixesIndex];
+		// Shift all elements between 0 and vanillaFixesIndex by one position to the right
+		for(int i = vanillaFixesIndex; i > 0; i--) {
+			dllListData.pAdditionalDLLs[i] = dllListData.pAdditionalDLLs[i-1];
+		}
+		// Put VanillaFixes.dll in the first position
+		dllListData.pAdditionalDLLs[0] = tempPath;
+		
+		// Restore the original state of the modification flag
+		// This will prevent the request from showing only because VanillaFixes.dll has been moved
+		dllListData.listModified = wasModified;
+	}
+
 	// If there are additional DLLs, and the list has been modified since last launch, show a message box
 	if(dllListData.nAdditionalDLLs && dllListData.listModified) {
 		LPCWSTR pFormat =
@@ -104,28 +132,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	int injectError = 0;
 	if(dllListData.nAdditionalDLLs) {
-		// Check if VanillaFixes.dll is in the list
-		int vanillaFixesIndex = -1;
-		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
-			LPWSTR fileName = PathFindFileName(dllListData.pAdditionalDLLs[i]);
-			if(_wcsicmp(fileName, L"VanillaFixes.dll") == 0) {
-				vanillaFixesIndex = i;
-				break;
-			}
-		}
-
-		// If VanillaFixes.dll is found and it is not the first in the list, move it to the first position
-		if(vanillaFixesIndex > 0) {
-			LPWSTR tempPath = dllListData.pAdditionalDLLs[vanillaFixesIndex];
-			// Move all elements between 0 and vanillaFixesIndex one position to the right
-			for(int i = vanillaFixesIndex; i > 0; i--) {
-				dllListData.pAdditionalDLLs[i] = dllListData.pAdditionalDLLs[i-1];
-			}
-			// Put VanillaFixes.dll in the first position
-			dllListData.pAdditionalDLLs[0] = tempPath;
-			vanillaFixesIndex = 0; // Updating the index
-		}
-
 		// Load all DLLs in order (now VanillaFixes.dll is the first in the list)
 		for(int i = 0; i < dllListData.nAdditionalDLLs; i++) {
 			injectError = injectError || RemoteLoadLibrary(dllListData.pAdditionalDLLs[i], processInfo.hProcess);
