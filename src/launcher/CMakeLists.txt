@@ -2,7 +2,6 @@ add_executable(vanillafixes_launcher WIN32
 	"main.c"
 	"cmdline.c"
 	"selftest.c"
-	"localization.c"
 
 	"${CMAKE_SOURCE_DIR}/src/loader.c"
 	"${CMAKE_SOURCE_DIR}/src/os.c"
