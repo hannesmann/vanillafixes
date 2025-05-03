@@ -51,12 +51,28 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		return SelfTestMain(hInstance, hPrevInstance, pCmdLine, nCmdShow);
 	}
 
+	// Check if there is a custom path to WoW.exe
+	if (cmdLineData.pWowExePath != pWowExePath) {
+		// If a custom path is specified, check if it exists
+		if (GetFileAttributes(cmdLineData.pWowExePath) == INVALID_FILE_ATTRIBUTES) {
+			// If the custom path is incorrect, revert to the default path
+			cmdLineData.pWowExePath = pWowExePath;
+		}
+	}
+
+	// Check if there is a standard path to WoW.exe
+	if (GetFileAttributes(cmdLineData.pWowExePath) == INVALID_FILE_ATTRIBUTES) {
+		// If neither custom nor default paths exist, we get an error
+		MessageBox(NULL, 
+			L"WoW.exe not found. Neither the specified path nor the default path is valid.\r\n"
+			L"Extract VanillaFixes into the same directory as the game or specify a valid path to WoW.exe.", 
+			L"VanillaFixes Error", 
+			MB_OK | MB_ICONERROR);
+		return 1;
+	}
+
 	LPWSTR pConfigPath = malloc(MAX_PATH * sizeof(WCHAR));
 	PathCombine(pConfigPath, pWowDirectory, L"dlls.txt");
-
-	// Check if the necessary files exist
-	AssertMessageBoxF(GetFileAttributes(pWowExePath) != INVALID_FILE_ATTRIBUTES,
-		L"WoW.exe not found. Extract VanillaFixes into the same directory as the game.");
 
 	// Check to see if additional DLLs should be loaded
 	VF_DLL_LIST_PARSE_DATA dllListData = {0};
