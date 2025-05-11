@@ -40,5 +40,5 @@ target_sources(
 target_link_libraries(vanillafixes_dll shlwapi winmm psapi)
 
 set_target_properties(vanillafixes_dll PROPERTIES PREFIX "")
-set_target_properties(vanillafixes_dll PROPERTIES OUTPUT_NAME "VfPatcher")
+set_target_properties(vanillafixes_dll PROPERTIES OUTPUT_NAME "VanillaFixes")
 set_target_properties(vanillafixes_dll PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")

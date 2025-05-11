@@ -26,7 +26,7 @@ if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
 	)
 endif()
 
-option(BUILD_DLL "Build the DLL (VfPatcher.dll)" ON)
+option(BUILD_DLL "Build the DLL (VanillaFixes.dll)" ON)
 option(BUILD_LAUNCHER "Build the launcher (VanillaFixes.exe)" ON)
 
 if(BUILD_DLL)
